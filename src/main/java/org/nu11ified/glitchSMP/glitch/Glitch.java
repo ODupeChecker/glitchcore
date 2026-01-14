@@ -8,6 +8,7 @@ import java.util.UUID;
  * Base class for all glitches in the Glitch SMP plugin.
  */
 public abstract class Glitch {
+    private final GlitchType type;
     private final String name;
     private final String description;
     private final long cooldownMillis;
@@ -20,12 +21,14 @@ public abstract class Glitch {
     /**
      * Constructor for a glitch
      * 
+     * @param type The glitch type
      * @param name The name of the glitch
      * @param description The description of the glitch
      * @param cooldownMillis The cooldown time in milliseconds
      * @param durationMillis The duration time in milliseconds (0 for instant effects)
      */
-    public Glitch(String name, String description, long cooldownMillis, long durationMillis) {
+    public Glitch(GlitchType type, String name, String description, long cooldownMillis, long durationMillis) {
+        this.type = type;
         this.name = name;
         this.description = description;
         this.cooldownMillis = cooldownMillis;
@@ -111,6 +114,15 @@ public abstract class Glitch {
      */
     public String getName() {
         return name;
+    }
+
+    /**
+     * Gets the glitch type
+     *
+     * @return The glitch type
+     */
+    public GlitchType getType() {
+        return type;
     }
     
     /**

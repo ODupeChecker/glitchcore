@@ -8,7 +8,6 @@ import org.nu11ified.glitchSMP.GlitchSMP;
 import org.nu11ified.glitchSMP.glitch.Glitch;
 import org.nu11ified.glitchSMP.manager.GlitchManager;
 
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -24,6 +23,7 @@ public class GlitchDisplay {
     
     // Update interval in ticks (1 second = 20 ticks)
     private static final long UPDATE_INTERVAL = 10;
+    private static final String EMPTY_SLOT_ICON = "";
     
     /**
      * Constructor for GlitchDisplay
@@ -77,65 +77,22 @@ public class GlitchDisplay {
      * @param player The player to update the display for
      */
     private void updateDisplay(Player player) {
-        // Get the player's equipped glitches
-        List<Glitch> equippedGlitches = glitchManager.getEquippedGlitches(player);
-        
-        // If the player has no equipped glitches, don't display anything
-        if (equippedGlitches.isEmpty()) {
-            return;
-        }
-        
-        // Build the display string
+        Glitch[] slots = glitchManager.getEquippedGlitchSlots(player);
         StringBuilder displayBuilder = new StringBuilder();
+        displayBuilder.append(ChatColor.WHITE);
         
-        // Add slot indicator
-        displayBuilder.append(ChatColor.GOLD).append("Glitches: ");
-        
-        // Add each equipped glitch to the display
-        for (int i = 0; i < equippedGlitches.size(); i++) {
-            Glitch glitch = equippedGlitches.get(i);
-            
-            // Add a separator between glitches
+        for (int i = 0; i < slots.length; i++) {
             if (i > 0) {
-                displayBuilder.append(" ").append(ChatColor.GRAY).append("|").append(" ");
+                displayBuilder.append(" ");
             }
-            
-            // Add slot indicator
-            String slotName = (i == 0) ? "R" : "L"; // Right (0) or Left (1)
-            displayBuilder.append(ChatColor.AQUA).append("[").append(slotName).append("] ");
-            
-            // Add the glitch name with appropriate color
-            if (glitchManager.isGlitchActive(player, glitch)) {
-                // Active glitch - green
-                displayBuilder.append(ChatColor.GREEN);
-                displayBuilder.append(glitch.getName());
-                
-                // Add remaining duration for active glitches
-                long durationSeconds = glitch.getRemainingDuration() / 1000;
-                displayBuilder.append(" (").append(durationSeconds).append("s)");
-            } else if (glitch.isOnCooldown()) {
-                // Glitch on cooldown - red
-                displayBuilder.append(ChatColor.RED);
-                displayBuilder.append(glitch.getName());
-                
-                // Add cooldown time if on cooldown
-                long cooldownSeconds = glitch.getRemainingCooldown() / 1000;
-                displayBuilder.append(" (").append(cooldownSeconds).append("s)");
+            Glitch glitch = slots[i];
+            if (glitch == null) {
+                displayBuilder.append(EMPTY_SLOT_ICON);
             } else {
-                // Ready glitch - yellow
-                displayBuilder.append(ChatColor.YELLOW);
-                displayBuilder.append(glitch.getName());
-                displayBuilder.append(" ").append(ChatColor.GREEN).append("✓");
+                displayBuilder.append(glitch.getType().getActionBarIcon());
             }
         }
         
-        // Add activation hint
-        if (equippedGlitches.size() > 0) {
-            displayBuilder.append(" ").append(ChatColor.GRAY).append("| ");
-            displayBuilder.append(ChatColor.WHITE).append("Offhand: Right, Crouch+Offhand: Left");
-        }
-        
-        // Send the action bar message
         sendActionBar(player, displayBuilder.toString());
     }
     

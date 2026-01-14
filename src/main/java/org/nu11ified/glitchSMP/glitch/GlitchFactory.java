@@ -2,7 +2,7 @@ package org.nu11ified.glitchSMP.glitch;
 
 import org.bukkit.ChatColor;
 import org.nu11ified.glitchSMP.GlitchSMP;
-import org.nu11ified.glitchSMP.glitch.impl.*;
+import org.nu11ified.glitchSMP.glitch.impl.ImmortalityGlitch;
 
 /**
  * Factory class for creating glitch instances.
@@ -27,13 +27,8 @@ public class GlitchFactory {
      */
     public Glitch createGlitch(GlitchType type) {
         switch (type) {
-            case INVISIBILITY:
-                return new InvisibilityGlitch();
-            case IMMUNITY:
-                return new ImmunityGlitch(plugin);
-            case TELEPORT:
-                return new TeleportGlitch(plugin);
-            // TODO: Implement the rest of the glitches
+            case IMMORTALITY:
+                return new ImmortalityGlitch(plugin);
             default:
                 // For unimplemented glitches, return a placeholder glitch
                 return createPlaceholderGlitch(type);
@@ -47,7 +42,13 @@ public class GlitchFactory {
      * @return A placeholder glitch
      */
     private Glitch createPlaceholderGlitch(GlitchType type) {
-        return new Glitch(type.getName(), type.getDescription(), 60000, 30000) {
+        return new Glitch(
+            type,
+            type.getName(),
+            type.getDescription(),
+            type.getCooldownMillis(),
+            type.getDurationMillis()
+        ) {
             @Override
             protected void onActivate(org.bukkit.entity.Player player) {
                 player.sendMessage(ChatColor.RED + "The " + type.getName() + " is not yet implemented.");

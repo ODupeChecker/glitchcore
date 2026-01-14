@@ -14,27 +14,25 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Immunity Glitch implementation.
+ * Immortality Glitch implementation.
  * Makes the player immune to all damage for 30 seconds.
  */
-public class ImmunityGlitch extends Glitch implements Listener {
-    private static final long DURATION_MILLIS = 30 * 1000; // 30 seconds
-    private static final long COOLDOWN_MILLIS = 5 * 60 * 1000; // 5 minutes
-    
+public class ImmortalityGlitch extends Glitch implements Listener {
     private final GlitchSMP plugin;
     private final Set<UUID> immunePlayers = new HashSet<>();
     
     /**
-     * Constructor for ImmunityGlitch
+     * Constructor for ImmortalityGlitch
      * 
      * @param plugin The main plugin instance
      */
-    public ImmunityGlitch(GlitchSMP plugin) {
+    public ImmortalityGlitch(GlitchSMP plugin) {
         super(
-            GlitchType.IMMUNITY.getName(),
-            GlitchType.IMMUNITY.getDescription(),
-            COOLDOWN_MILLIS,
-            DURATION_MILLIS
+            GlitchType.IMMORTALITY,
+            GlitchType.IMMORTALITY.getName(),
+            GlitchType.IMMORTALITY.getDescription(),
+            GlitchType.IMMORTALITY.getCooldownMillis(),
+            GlitchType.IMMORTALITY.getDurationMillis()
         );
         this.plugin = plugin;
     }
@@ -51,7 +49,7 @@ public class ImmunityGlitch extends Glitch implements Listener {
         player.setGlowing(true);
         
         // Send message to player
-        player.sendMessage("§aYou activated the Immunity Glitch! You are now immune to all damage for 30 seconds.");
+        player.sendMessage("§aYou activated the Immortality Glitch! You are now immune to all damage for 30 seconds.");
     }
     
     @Override
@@ -68,7 +66,7 @@ public class ImmunityGlitch extends Glitch implements Listener {
         }
         
         // Send message to player
-        player.sendMessage("§cYour Immunity Glitch has worn off.");
+        player.sendMessage("§cYour Immortality Glitch has worn off.");
     }
     
     /**

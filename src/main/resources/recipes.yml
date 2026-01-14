@@ -1,119 +1,105 @@
 # GlitchSMP Crafting Recipes Configuration
 # Server owners can customize these recipes by editing this file
-# 
+#
 # ITEM DEFINITIONS:
 # Define what each letter represents in the recipes below
 items:
-  E: minecraft:ender_pearl
-  F: minecraft:firework_rocket
-  G: minecraft:glass
-  D: minecraft:diamond
-  I: minecraft:ice
-  M: minecraft:mushroom_stew
-  R: minecraft:redstone
-  L: minecraft:lightning_rod
-  P: minecraft:potion
+  B: minecraft:bedrock
+  T: minecraft:totem_of_undying
   C: minecraft:chest
-  H: minecraft:hopper
-  S: minecraft:stick
-  B: minecraft:barrier
-  RS: minecraft:redstone_block
+  E: minecraft:ender_pearl
+  O: minecraft:obsidian
   V: minecraft:vine
-  T: minecraft:tnt
-  PH: minecraft:player_head
+  P: minecraft:enchanted_book
+  R: minecraft:redstone_block
+  G: minecraft:glass
+  I: minecraft:ice
+  F: minecraft:firework_rocket
+  M: minecraft:book
+  Q: minecraft:quartz
+  L: minecraft:lead
+  S: minecraft:stick
+  D: minecraft:diamond
 
 # RECIPES:
 # Each glitch recipe uses the letters defined above in a 3x3 grid
-# The format is: GLITCH_NAME: [3x3 grid pattern]
-# You can easily add new items by adding them to the items section above
 
-# Movement & Mobility Glitches
-TELEPORT:
-  - "E E E"
-  - "E E E" 
-  - "E E E"
+BEDROCK:
+  - "B B B"
+  - "B B B"
+  - "B B B"
 
-GLIDE:
-  - "F F F"
-  - "F F F"
-  - "F F F"
-
-INVISIBILITY:
-  - "G G G"
-  - "G G G"
-  - "G G G"
-
-# Defensive & Protection Glitches
-IMMUNITY:
-  - "D D D"
-  - "D D D"
-  - "D D D"
-
-FREEZE:
-  - "I I I"
-  - "I I I"
-  - "I I I"
-
-DREAM:
-  - "M M M"
-  - "M M M"
-  - "M M M"
-
-# Combat & Offensive Glitches
-CRASH:
-  - "R R R"
-  - "R R R"
-  - "R R R"
-
-HEROBRINE:
-  - "L L L"
-  - "L L L"
-  - "L L L"
-
-EFFECT:
-  - "P P P"
-  - "P P P"
-  - "P P P"
-
-# Inventory & Items Glitches
-DUPE:
-  - "C C C"
-  - "C C C"
-  - "C C C"
+IMMORTALITY:
+  - "T T T"
+  - "T T T"
+  - "T T T"
 
 INVENTORY:
-  - "H H H"
-  - "H H H"
-  - "H H H"
+  - "C C C"
+  - "C C C"
+  - "C C C"
 
-ITEM:
-  - "S S S"
-  - "S S S"
-  - "S S S"
+REWIND:
+  - "E E E"
+  - "E E E"
+  - "E E E"
 
-FAKE_BLOCK:
-  - "B B B"
-  - "B B B"
-  - "B B B"
-
-# World & Environment Glitches
-REDSTONE:
-  - "RS RS RS"
-  - "RS RS RS"
-  - "RS RS RS"
+CHUNK:
+  - "O O O"
+  - "O O O"
+  - "O O O"
 
 VIRUS:
   - "V V V"
   - "V V V"
   - "V V V"
 
-DIFFUSER:
-  - "T T T"
-  - "T T T"
-  - "T T T"
+ENCHANTER:
+  - "P P P"
+  - "P P P"
+  - "P P P"
 
-# Miscellaneous Glitches
-MORPH:
-  - "PH PH PH"
-  - "PH PH PH"
-  - "PH PH PH"
+REDSTONE:
+  - "R R R"
+  - "R R R"
+  - "R R R"
+
+FAKE_BLOCK:
+  - "G G G"
+  - "G G G"
+  - "G G G"
+
+FREEZE:
+  - "I I I"
+  - "I I I"
+  - "I I I"
+
+WINDBURST:
+  - "F F F"
+  - "F F F"
+  - "F F F"
+
+HYPNOSIS:
+  - "M M M"
+  - "M M M"
+  - "M M M"
+
+GRAVITY:
+  - "Q Q Q"
+  - "Q Q Q"
+  - "Q Q Q"
+
+HORSETAMER:
+  - "L L L"
+  - "L L L"
+  - "L L L"
+
+TELEKINESIS:
+  - "S S S"
+  - "S S S"
+  - "S S S"
+
+RAYCAST:
+  - "D D D"
+  - "D D D"
+  - "D D D"

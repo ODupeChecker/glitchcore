@@ -4,7 +4,13 @@ import org.bukkit.entity.Player;
 import org.nu11ified.glitchSMP.GlitchSMP;
 import org.nu11ified.glitchSMP.glitch.Glitch;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.OptionalInt;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -17,10 +23,7 @@ public class GlitchManager {
     private static final int MAX_EQUIPPED_GLITCHES = 2;
     
     // Map of player UUIDs to their equipped glitches
-    private final Map<UUID, List<Glitch>> equippedGlitches = new ConcurrentHashMap<>();
-    
-    // Map of player UUIDs to their owned glitches
-    private final Map<UUID, Set<Glitch>> ownedGlitches = new ConcurrentHashMap<>();
+    private final Map<UUID, Glitch[]> equippedGlitches = new ConcurrentHashMap<>();
     
     // Map of active glitches and their scheduled deactivation tasks
     private final Map<UUID, Map<UUID, Integer>> activeGlitchTasks = new ConcurrentHashMap<>();
@@ -35,105 +38,47 @@ public class GlitchManager {
     }
     
     /**
-     * Gives a glitch to a player
-     * 
-     * @param player The player to give the glitch to
-     * @param glitch The glitch to give
-     * @return true if the player didn't already have the glitch, false otherwise
-     */
-    public boolean giveGlitch(Player player, Glitch glitch) {
-        UUID playerUUID = player.getUniqueId();
-        
-        // Initialize collections if they don't exist
-        ownedGlitches.computeIfAbsent(playerUUID, k -> new HashSet<>());
-        
-        // Check if player already has this type of glitch
-        boolean alreadyOwned = false;
-        for (Glitch ownedGlitch : ownedGlitches.get(playerUUID)) {
-            if (ownedGlitch.getClass().equals(glitch.getClass())) {
-                alreadyOwned = true;
-                break;
-            }
-        }
-        
-        if (!alreadyOwned) {
-            ownedGlitches.get(playerUUID).add(glitch);
-            return true;
-        }
-        
-        return false;
-    }
-    
-    /**
-     * Removes a glitch from a player
-     * 
-     * @param player The player to remove the glitch from
-     * @param glitch The glitch to remove
-     * @return true if the player had the glitch and it was removed, false otherwise
-     */
-    public boolean removeGlitch(Player player, Glitch glitch) {
-        UUID playerUUID = player.getUniqueId();
-        
-        if (!ownedGlitches.containsKey(playerUUID)) {
-            return false;
-        }
-        
-        // If the glitch is equipped, unequip it first
-        if (isGlitchEquipped(player, glitch)) {
-            unequipGlitch(player, glitch);
-        }
-        
-        return ownedGlitches.get(playerUUID).remove(glitch);
-    }
-    
-    /**
      * Equips a glitch for a player
      * 
      * @param player The player to equip the glitch for
      * @param glitch The glitch to equip
-     * @return true if the glitch was equipped, false if the player doesn't own the glitch or has max glitches equipped
+     * @return the slot index that was equipped, or empty if no slot is available
      */
-    public boolean equipGlitch(Player player, Glitch glitch) {
+    public OptionalInt equipGlitch(Player player, Glitch glitch) {
         UUID playerUUID = player.getUniqueId();
+        Glitch[] slots = equippedGlitches.computeIfAbsent(playerUUID, k -> new Glitch[MAX_EQUIPPED_GLITCHES]);
         
-        // Initialize collections if they don't exist
-        equippedGlitches.computeIfAbsent(playerUUID, k -> new ArrayList<>());
-        
-        // Check if player owns the glitch
-        if (!ownedGlitches.containsKey(playerUUID) || !ownedGlitches.get(playerUUID).contains(glitch)) {
-            return false;
+        for (int i = 0; i < MAX_EQUIPPED_GLITCHES; i++) {
+            if (slots[i] == null) {
+                slots[i] = glitch;
+                return OptionalInt.of(i);
+            }
         }
         
-        // Check if player already has max glitches equipped
-        if (equippedGlitches.get(playerUUID).size() >= MAX_EQUIPPED_GLITCHES) {
-            return false;
-        }
-        
-        // Equip the glitch
-        equippedGlitches.get(playerUUID).add(glitch);
-        return true;
+        return OptionalInt.empty();
     }
     
     /**
      * Unequips a glitch for a player
      * 
      * @param player The player to unequip the glitch for
-     * @param glitch The glitch to unequip
-     * @return true if the glitch was unequipped, false if the player doesn't have the glitch equipped
+     * @param slot The slot index to unequip
+     * @return The unequipped glitch, or null if none was equipped in that slot
      */
-    public boolean unequipGlitch(Player player, Glitch glitch) {
+    public Glitch unequipGlitch(Player player, int slot) {
         UUID playerUUID = player.getUniqueId();
-        
-        if (!equippedGlitches.containsKey(playerUUID)) {
-            return false;
+        Glitch[] slots = equippedGlitches.get(playerUUID);
+        if (slots == null || slot < 0 || slot >= MAX_EQUIPPED_GLITCHES) {
+            return null;
         }
         
-        // If the glitch is active, deactivate it
-        if (isGlitchActive(player, glitch)) {
-            deactivateGlitch(player, glitch);
+        Glitch removed = slots[slot];
+        if (removed != null && isGlitchActive(player, removed)) {
+            deactivateGlitch(player, removed);
         }
         
-        return equippedGlitches.get(playerUUID).remove(glitch);
+        slots[slot] = null;
+        return removed;
     }
     
     /**
@@ -203,8 +148,18 @@ public class GlitchManager {
      */
     public boolean isGlitchEquipped(Player player, Glitch glitch) {
         UUID playerUUID = player.getUniqueId();
+        Glitch[] slots = equippedGlitches.get(playerUUID);
+        if (slots == null) {
+            return false;
+        }
         
-        return equippedGlitches.containsKey(playerUUID) && equippedGlitches.get(playerUUID).contains(glitch);
+        for (Glitch slotGlitch : slots) {
+            if (slotGlitch == glitch) {
+                return true;
+            }
+        }
+        
+        return false;
     }
     
     /**
@@ -223,22 +178,6 @@ public class GlitchManager {
     }
     
     /**
-     * Gets all glitches owned by a player
-     * 
-     * @param player The player to get glitches for
-     * @return A set of glitches owned by the player
-     */
-    public Set<Glitch> getOwnedGlitches(Player player) {
-        UUID playerUUID = player.getUniqueId();
-        
-        if (!ownedGlitches.containsKey(playerUUID)) {
-            return Collections.emptySet();
-        }
-        
-        return Collections.unmodifiableSet(ownedGlitches.get(playerUUID));
-    }
-    
-    /**
      * Gets all glitches equipped by a player
      * 
      * @param player The player to get glitches for
@@ -246,12 +185,50 @@ public class GlitchManager {
      */
     public List<Glitch> getEquippedGlitches(Player player) {
         UUID playerUUID = player.getUniqueId();
-        
-        if (!equippedGlitches.containsKey(playerUUID)) {
+        Glitch[] slots = equippedGlitches.get(playerUUID);
+        if (slots == null) {
             return Collections.emptyList();
         }
         
-        return Collections.unmodifiableList(equippedGlitches.get(playerUUID));
+        List<Glitch> glitches = new ArrayList<>();
+        for (Glitch glitch : slots) {
+            if (glitch != null) {
+                glitches.add(glitch);
+            }
+        }
+        
+        return Collections.unmodifiableList(glitches);
+    }
+    
+    /**
+     * Gets the equipped glitch in a specific slot
+     *
+     * @param player The player to get glitches for
+     * @param slot The slot index
+     * @return The glitch in the slot, or null if empty
+     */
+    public Glitch getEquippedGlitch(Player player, int slot) {
+        UUID playerUUID = player.getUniqueId();
+        Glitch[] slots = equippedGlitches.get(playerUUID);
+        if (slots == null || slot < 0 || slot >= MAX_EQUIPPED_GLITCHES) {
+            return null;
+        }
+        return slots[slot];
+    }
+    
+    /**
+     * Gets a copy of the equipped glitch slots
+     *
+     * @param player The player to get slots for
+     * @return An array of glitches for each slot
+     */
+    public Glitch[] getEquippedGlitchSlots(Player player) {
+        UUID playerUUID = player.getUniqueId();
+        Glitch[] slots = equippedGlitches.get(playerUUID);
+        if (slots == null) {
+            return new Glitch[MAX_EQUIPPED_GLITCHES];
+        }
+        return slots.clone();
     }
     
     /**
@@ -263,9 +240,10 @@ public class GlitchManager {
         UUID playerUUID = player.getUniqueId();
         
         // Deactivate any active glitches
-        if (equippedGlitches.containsKey(playerUUID)) {
-            for (Glitch glitch : equippedGlitches.get(playerUUID)) {
-                if (isGlitchActive(player, glitch)) {
+        Glitch[] slots = equippedGlitches.get(playerUUID);
+        if (slots != null) {
+            for (Glitch glitch : slots) {
+                if (glitch != null && isGlitchActive(player, glitch)) {
                     deactivateGlitch(player, glitch);
                 }
             }
@@ -274,7 +252,7 @@ public class GlitchManager {
         // Remove all task data
         activeGlitchTasks.remove(playerUUID);
         
-        // We don't remove equipped or owned glitches here as they should persist
+        // We don't remove equipped glitches here as they should persist
         // between sessions. This would be handled by a data storage system.
     }
 }

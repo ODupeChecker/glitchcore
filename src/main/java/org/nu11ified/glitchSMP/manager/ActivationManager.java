@@ -8,14 +8,15 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.nu11ified.glitchSMP.GlitchSMP;
 import org.nu11ified.glitchSMP.glitch.Glitch;
 import org.nu11ified.glitchSMP.glitch.GlitchType;
+import org.nu11ified.glitchSMP.item.GlitchItemFactory;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalInt;
 import java.util.UUID;
 
 /**
@@ -25,6 +26,7 @@ import java.util.UUID;
 public class ActivationManager implements Listener {
     private final GlitchSMP plugin;
     private final GlitchManager glitchManager;
+    private final GlitchItemFactory glitchItemFactory;
     
     // Track which glitch slot each player is currently using
     private final Map<UUID, Integer> currentGlitchSlot = new HashMap<>();
@@ -38,9 +40,10 @@ public class ActivationManager implements Listener {
      * @param plugin The main plugin instance
      * @param glitchManager The glitch manager instance
      */
-    public ActivationManager(GlitchSMP plugin, GlitchManager glitchManager) {
+    public ActivationManager(GlitchSMP plugin, GlitchManager glitchManager, GlitchItemFactory glitchItemFactory) {
         this.plugin = plugin;
         this.glitchManager = glitchManager;
+        this.glitchItemFactory = glitchItemFactory;
     }
     
     /**
@@ -54,41 +57,29 @@ public class ActivationManager implements Listener {
         ItemStack item = event.getItem();
         
         // Check if the player is right-clicking with a glitch item
-        if (item != null && isGlitchItem(item)) {
+        if (item != null && glitchItemFactory.isGlitchItem(item)) {
             event.setCancelled(true); // Prevent default item usage
             
             // Get the glitch type from the item
-            GlitchType glitchType = getGlitchTypeFromItem(item);
+            GlitchType glitchType = glitchItemFactory.getGlitchType(item).orElse(null);
             if (glitchType != null) {
-                // Check if player already owns this glitch
-                boolean alreadyOwned = false;
-                for (Glitch ownedGlitch : glitchManager.getOwnedGlitches(player)) {
-                    if (ownedGlitch.getName().equals(glitchType.getName())) {
-                        alreadyOwned = true;
-                        break;
-                    }
-                }
+                // Equip the glitch to the first available slot
+                Glitch glitch = plugin.getGlitchFactory().createGlitch(glitchType);
+                OptionalInt slot = glitchManager.equipGlitch(player, glitch);
                 
-                if (!alreadyOwned) {
-                    // Give the glitch to the player
-                    Glitch glitch = plugin.getGlitchFactory().createGlitch(glitchType);
-                    boolean success = glitchManager.giveGlitch(player, glitch);
+                if (slot.isPresent()) {
+                    int slotIndex = slot.getAsInt();
+                    String slotName = slotIndex == 0 ? "right" : "left";
+                    player.sendMessage(ChatColor.GREEN + "Equipped " + glitch.getName() + " to the " + slotName + " slot.");
                     
-                    if (success) {
-                        player.sendMessage(ChatColor.GREEN + "You received " + glitch.getName() + "!");
-                        player.sendMessage(ChatColor.YELLOW + "Use /glitch equip " + glitchType.getName().replace(" Glitch", "") + " to equip it.");
-                        
-                        // Remove the glitch item from inventory
-                        if (item.getAmount() > 1) {
-                            item.setAmount(item.getAmount() - 1);
-                        } else {
-                            player.getInventory().removeItem(item);
-                        }
+                    // Remove the glitch item from inventory
+                    if (item.getAmount() > 1) {
+                        item.setAmount(item.getAmount() - 1);
                     } else {
-                        player.sendMessage(ChatColor.RED + "You already own " + glitch.getName());
+                        player.getInventory().removeItem(item);
                     }
                 } else {
-                    player.sendMessage(ChatColor.YELLOW + "You already own " + glitchType.getName());
+                    player.sendMessage(ChatColor.RED + "Both glitch slots are full. Use /withdraw to free a slot.");
                 }
             }
         }
@@ -112,7 +103,7 @@ public class ActivationManager implements Listener {
         
         if (equippedGlitches.isEmpty()) {
             player.sendMessage(ChatColor.RED + "You don't have any glitches equipped!");
-            player.sendMessage(ChatColor.YELLOW + "Use /glitch equip <glitch> to equip a glitch.");
+            player.sendMessage(ChatColor.YELLOW + "Right-click a glitch item to equip it.");
             return;
         }
         
@@ -121,13 +112,11 @@ public class ActivationManager implements Listener {
         int glitchIndex = isSneaking ? 1 : 0; // Left slot (1) if sneaking, right slot (0) if not
         
         // Ensure the glitch index is valid
-        if (glitchIndex >= equippedGlitches.size()) {
+        Glitch glitchToActivate = glitchManager.getEquippedGlitch(player, glitchIndex);
+        if (glitchToActivate == null) {
             player.sendMessage(ChatColor.RED + "No glitch equipped in " + (isSneaking ? "left" : "right") + " slot!");
             return;
         }
-        
-        // Get the glitch to activate
-        Glitch glitchToActivate = equippedGlitches.get(glitchIndex);
         
         // Try to activate the glitch
         boolean success = glitchManager.activateGlitch(player, glitchToActivate);
@@ -166,62 +155,16 @@ public class ActivationManager implements Listener {
         
         // Show which glitch slot will be used
         if (event.isSneaking()) {
-            List<Glitch> equippedGlitches = glitchManager.getEquippedGlitches(player);
-            if (equippedGlitches.size() > 1) {
+            Glitch glitch = glitchManager.getEquippedGlitch(player, 1);
+            if (glitch != null) {
                 player.sendMessage(ChatColor.YELLOW + "Left glitch slot selected (use offhand keybind to activate)");
             }
         } else {
-            List<Glitch> equippedGlitches = glitchManager.getEquippedGlitches(player);
-            if (!equippedGlitches.isEmpty()) {
+            Glitch glitch = glitchManager.getEquippedGlitch(player, 0);
+            if (glitch != null) {
                 player.sendMessage(ChatColor.YELLOW + "Right glitch slot selected (use offhand keybind to activate)");
             }
         }
-    }
-    
-    /**
-     * Checks if an item is a glitch item
-     * 
-     * @param item The item to check
-     * @return true if it's a glitch item, false otherwise
-     */
-    private boolean isGlitchItem(ItemStack item) {
-        if (item.getType() != org.bukkit.Material.NETHER_STAR) {
-            return false;
-        }
-        
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null || !meta.hasDisplayName()) {
-            return false;
-        }
-        
-        String displayName = meta.getDisplayName();
-        return displayName.contains("Glitch");
-    }
-    
-    /**
-     * Gets the glitch type from a glitch item
-     * 
-     * @param item The glitch item
-     * @return The glitch type, or null if not found
-     */
-    private GlitchType getGlitchTypeFromItem(ItemStack item) {
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null || !meta.hasDisplayName()) {
-            return null;
-        }
-        
-        String displayName = meta.getDisplayName();
-        // Remove color codes and "Glitch" suffix
-        String cleanName = ChatColor.stripColor(displayName).replace(" Glitch", "");
-        
-        // Try to find the matching glitch type
-        for (GlitchType type : GlitchType.values()) {
-            if (type.getName().equals(cleanName + " Glitch")) {
-                return type;
-            }
-        }
-        
-        return null;
     }
     
     /**
