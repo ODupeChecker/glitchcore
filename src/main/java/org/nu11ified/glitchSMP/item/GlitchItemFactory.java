@@ -8,6 +8,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.nu11ified.glitchSMP.GlitchSMP;
+import org.nu11ified.glitchSMP.config.GlitchResourcePackRegistry;
 import org.nu11ified.glitchSMP.glitch.GlitchType;
 
 import java.util.ArrayList;
@@ -20,9 +21,11 @@ import java.util.Optional;
 public class GlitchItemFactory {
     private static final Material GLITCH_ITEM_MATERIAL = Material.CLAY_BALL;
     private final NamespacedKey glitchTypeKey;
+    private final GlitchResourcePackRegistry resourcePackRegistry;
 
-    public GlitchItemFactory(GlitchSMP plugin) {
+    public GlitchItemFactory(GlitchSMP plugin, GlitchResourcePackRegistry resourcePackRegistry) {
         this.glitchTypeKey = new NamespacedKey(plugin, "glitch_type");
+        this.resourcePackRegistry = resourcePackRegistry;
     }
 
     public ItemStack createGlitchItem(GlitchType glitchType) {
@@ -31,7 +34,7 @@ public class GlitchItemFactory {
 
         if (meta != null) {
             meta.setDisplayName(ChatColor.LIGHT_PURPLE + glitchType.getName());
-            meta.setCustomModelData(glitchType.getModelData());
+            meta.setCustomModelData(resourcePackRegistry.getModelData(glitchType));
             PersistentDataContainer container = meta.getPersistentDataContainer();
             container.set(glitchTypeKey, PersistentDataType.STRING, glitchType.name());
 
@@ -76,6 +79,10 @@ public class GlitchItemFactory {
         }
 
         if (meta.hasCustomModelData()) {
+            GlitchType type = resourcePackRegistry.getTypeForModelData(meta.getCustomModelData());
+            if (type != null) {
+                return Optional.of(type);
+            }
             return GlitchType.fromModelData(meta.getCustomModelData());
         }
 

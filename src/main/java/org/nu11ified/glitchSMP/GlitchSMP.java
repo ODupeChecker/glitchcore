@@ -10,13 +10,18 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.nu11ified.glitchSMP.command.GlitchCommand;
 import org.nu11ified.glitchSMP.command.GlitchesCommand;
 import org.nu11ified.glitchSMP.command.WithdrawCommand;
+import org.nu11ified.glitchSMP.config.GlitchResourcePackRegistry;
+import org.nu11ified.glitchSMP.config.GlitchSettings;
 import org.nu11ified.glitchSMP.display.GlitchDisplay;
+import org.nu11ified.glitchSMP.effects.DefaultGlitchEffects;
+import org.nu11ified.glitchSMP.effects.GlitchEffects;
 import org.nu11ified.glitchSMP.glitch.GlitchFactory;
 import org.nu11ified.glitchSMP.item.GlitchItemFactory;
 import org.nu11ified.glitchSMP.manager.GlitchManager;
 import org.nu11ified.glitchSMP.manager.RecipeManager;
 import org.nu11ified.glitchSMP.manager.ActivationManager;
 import org.nu11ified.glitchSMP.manager.CraftingLimiter;
+import org.nu11ified.glitchSMP.util.DamageTickHelper;
 
 /**
  * Main plugin class for Glitch SMP.
@@ -29,14 +34,23 @@ public final class GlitchSMP extends JavaPlugin implements Listener {
     private ActivationManager activationManager;
     private CraftingLimiter craftingLimiter;
     private GlitchItemFactory glitchItemFactory;
+    private GlitchSettings glitchSettings;
+    private GlitchResourcePackRegistry resourcePackRegistry;
+    private GlitchEffects glitchEffects;
+    private DamageTickHelper damageTickHelper;
 
     @Override
     public void onEnable() {
+        glitchSettings = new GlitchSettings(this);
+        resourcePackRegistry = new GlitchResourcePackRegistry(glitchSettings);
+        glitchEffects = new DefaultGlitchEffects(glitchSettings);
+        damageTickHelper = new DamageTickHelper(this, glitchEffects);
+
         // Initialize components
         glitchFactory = new GlitchFactory(this);
         glitchManager = new GlitchManager(this);
-        glitchDisplay = new GlitchDisplay(this, glitchManager);
-        glitchItemFactory = new GlitchItemFactory(this);
+        glitchDisplay = new GlitchDisplay(this, glitchManager, resourcePackRegistry);
+        glitchItemFactory = new GlitchItemFactory(this, resourcePackRegistry);
         recipeManager = new RecipeManager(this, glitchItemFactory);
         activationManager = new ActivationManager(this, glitchManager, glitchItemFactory);
         craftingLimiter = new CraftingLimiter(glitchManager, glitchItemFactory);
@@ -179,5 +193,21 @@ public final class GlitchSMP extends JavaPlugin implements Listener {
      */
     public GlitchItemFactory getGlitchItemFactory() {
         return glitchItemFactory;
+    }
+
+    public GlitchSettings getGlitchSettings() {
+        return glitchSettings;
+    }
+
+    public GlitchResourcePackRegistry getResourcePackRegistry() {
+        return resourcePackRegistry;
+    }
+
+    public GlitchEffects getGlitchEffects() {
+        return glitchEffects;
+    }
+
+    public DamageTickHelper getDamageTickHelper() {
+        return damageTickHelper;
     }
 }

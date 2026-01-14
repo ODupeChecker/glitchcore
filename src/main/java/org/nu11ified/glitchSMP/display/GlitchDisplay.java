@@ -5,6 +5,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 import org.nu11ified.glitchSMP.GlitchSMP;
+import org.nu11ified.glitchSMP.config.GlitchResourcePackRegistry;
 import org.nu11ified.glitchSMP.glitch.Glitch;
 import org.nu11ified.glitchSMP.manager.GlitchManager;
 
@@ -17,6 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class GlitchDisplay {
     private final GlitchSMP plugin;
     private final GlitchManager glitchManager;
+    private final GlitchResourcePackRegistry resourcePackRegistry;
     
     // Map of player UUIDs to their action bar display tasks
     private final ConcurrentHashMap<UUID, BukkitTask> displayTasks = new ConcurrentHashMap<>();
@@ -31,9 +33,10 @@ public class GlitchDisplay {
      * @param plugin The main plugin instance
      * @param glitchManager The glitch manager instance
      */
-    public GlitchDisplay(GlitchSMP plugin, GlitchManager glitchManager) {
+    public GlitchDisplay(GlitchSMP plugin, GlitchManager glitchManager, GlitchResourcePackRegistry resourcePackRegistry) {
         this.plugin = plugin;
         this.glitchManager = glitchManager;
+        this.resourcePackRegistry = resourcePackRegistry;
     }
     
     /**
@@ -89,7 +92,7 @@ public class GlitchDisplay {
             if (glitch == null) {
                 displayBuilder.append(EMPTY_SLOT_ICON);
             } else {
-                displayBuilder.append(glitch.getType().getActionBarIcon());
+                displayBuilder.append(resourcePackRegistry.getIcon(glitch.getType()));
             }
         }
         

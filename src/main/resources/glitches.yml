@@ -1,0 +1,125 @@
+# Glitch configuration
+
+global:
+  combat:
+    damageTicks: 3
+    intervalTicks: 5
+    knockbackStrength: 0.4
+  audio:
+    activation:
+      volume: 1.0
+      pitch: 1.0
+    tick:
+      volume: 0.8
+      pitch: 1.0
+    end:
+      volume: 1.0
+      pitch: 0.9
+  visuals:
+    density: 10
+    radius: 1.2
+    durationTicks: 40
+
+resourcePack:
+  BEDROCK:
+    icon: ""
+    modelData: 14
+  IMMORTALITY:
+    icon: ""
+    modelData: 19
+  INVENTORY:
+    icon: ""
+    modelData: 16
+  REWIND:
+    icon: ""
+    modelData: 17
+  CHUNK:
+    icon: ""
+    modelData: 18
+  VIRUS:
+    icon: ""
+    modelData: 6
+  ENCHANTER:
+    icon: ""
+    modelData: 5
+  REDSTONE:
+    icon: ""
+    modelData: 4
+  FAKE_BLOCK:
+    icon: ""
+    modelData: 3
+  FREEZE:
+    icon: ""
+    modelData: 2
+  WINDBURST:
+    icon: ""
+    modelData: 7
+  HYPNOSIS:
+    icon: ""
+    modelData: 9
+  GRAVITY:
+    icon: ""
+    modelData: 10
+  HORSETAMER:
+    icon: ""
+    modelData: 11
+  TELEKINESIS:
+    icon: ""
+    modelData: 12
+  RAYCAST:
+    icon: ""
+    modelData: 13
+
+perGlitch:
+  BEDROCK:
+    durationSeconds: 15
+    cooldownSeconds: 120
+  IMMORTALITY:
+    durationSeconds: 30
+    cooldownSeconds: 300
+  INVENTORY:
+    durationSeconds: 7
+    cooldownSeconds: 120
+  REWIND:
+    durationSeconds: 15
+    cooldownSeconds: 60
+  CHUNK:
+    durationSeconds: 10
+    cooldownSeconds: 120
+  VIRUS:
+    durationSeconds: 10
+    cooldownSeconds: 120
+  ENCHANTER:
+    durationSeconds: 30
+    cooldownSeconds: 180
+  REDSTONE:
+    durationSeconds: 30
+    cooldownSeconds: 240
+  FAKE_BLOCK:
+    durationSeconds: 10
+    cooldownSeconds: 120
+  FREEZE:
+    durationSeconds: 5
+    cooldownSeconds: 90
+    baseDamage: 2.0
+  WINDBURST:
+    durationSeconds: 2
+    cooldownSeconds: 30
+    baseDamage: 3.0
+  HYPNOSIS:
+    durationSeconds: 6
+    cooldownSeconds: 120
+  GRAVITY:
+    durationSeconds: 15
+    cooldownSeconds: 60
+  HORSETAMER:
+    durationSeconds: 15
+    cooldownSeconds: 600
+  TELEKINESIS:
+    durationSeconds: 15
+    cooldownSeconds: 180
+    baseDamage: 1.0
+  RAYCAST:
+    durationSeconds: 0
+    cooldownSeconds: 120
+    baseDamage: 6.0

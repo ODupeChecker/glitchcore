@@ -1,90 +1,92 @@
 package org.nu11ified.glitchSMP.glitch.impl;
 
+import org.bukkit.Bukkit;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.scheduler.BukkitTask;
 import org.nu11ified.glitchSMP.GlitchSMP;
+import org.nu11ified.glitchSMP.config.GlitchSettings;
+import org.nu11ified.glitchSMP.effects.GlitchEffects;
 import org.nu11ified.glitchSMP.glitch.Glitch;
 import org.nu11ified.glitchSMP.glitch.GlitchType;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 /**
  * Immortality Glitch implementation.
- * Makes the player immune to all damage for 30 seconds.
+ * Makes the player immune to all damage for the active window.
  */
 public class ImmortalityGlitch extends Glitch implements Listener {
     private final GlitchSMP plugin;
+    private final GlitchEffects effects;
     private final Set<UUID> immunePlayers = new HashSet<>();
-    
-    /**
-     * Constructor for ImmortalityGlitch
-     * 
-     * @param plugin The main plugin instance
-     */
-    public ImmortalityGlitch(GlitchSMP plugin) {
+    private final Map<UUID, BukkitTask> auraTasks = new HashMap<>();
+
+    public ImmortalityGlitch(GlitchSMP plugin, GlitchSettings.GlitchProfile profile) {
         super(
             GlitchType.IMMORTALITY,
             GlitchType.IMMORTALITY.getName(),
             GlitchType.IMMORTALITY.getDescription(),
-            GlitchType.IMMORTALITY.getCooldownMillis(),
-            GlitchType.IMMORTALITY.getDurationMillis()
+            profile.cooldownMillis(),
+            profile.durationMillis()
         );
         this.plugin = plugin;
+        this.effects = plugin.getGlitchEffects();
     }
-    
+
     @Override
     protected void onActivate(Player player) {
-        // Register the event listener
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
-        
-        // Add player to immune set
-        immunePlayers.add(player.getUniqueId());
-        
-        // Visual effect to show immunity
+        UUID uuid = player.getUniqueId();
+        immunePlayers.add(uuid);
         player.setGlowing(true);
-        
-        // Send message to player
-        player.sendMessage("§aYou activated the Immortality Glitch! You are now immune to all damage for 30 seconds.");
+        effects.playActivation(player, getType());
+        player.getWorld().spawnParticle(Particle.TOTEM_OF_UNDYING, player.getLocation().add(0, 1, 0), 20, 0.4, 0.6, 0.4, 0.1);
+        player.playSound(player.getLocation(), Sound.BLOCK_BEACON_POWER_SELECT, 1.0f, 1.2f);
+
+        auraTasks.put(uuid, Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            if (player.isOnline() && immunePlayers.contains(uuid)) {
+                player.getWorld().spawnParticle(Particle.END_ROD, player.getLocation().add(0, 1, 0), 6, 0.3, 0.4, 0.3, 0.02);
+            }
+        }, 0L, 10L));
     }
-    
+
     @Override
     protected void onDeactivate(Player player) {
-        // Remove player from immune set
-        immunePlayers.remove(player.getUniqueId());
-        
-        // Remove visual effect
+        UUID uuid = player.getUniqueId();
+        immunePlayers.remove(uuid);
         player.setGlowing(false);
-        
-        // If no more immune players, unregister the event listener
+        BukkitTask task = auraTasks.remove(uuid);
+        if (task != null) {
+            task.cancel();
+        }
+        effects.playEnd(player, getType());
+        player.getWorld().spawnParticle(Particle.LARGE_SMOKE, player.getLocation().add(0, 1, 0), 10, 0.3, 0.5, 0.3, 0.05);
+        player.playSound(player.getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 1.0f, 0.9f);
         if (immunePlayers.isEmpty()) {
             HandlerList.unregisterAll(this);
         }
-        
-        // Send message to player
-        player.sendMessage("§cYour Immortality Glitch has worn off.");
     }
-    
-    /**
-     * Event handler for entity damage
-     * Cancels damage for immune players
-     */
+
     @EventHandler
     public void onEntityDamage(EntityDamageEvent event) {
-        if (event.getEntity() instanceof Player) {
-            Player player = (Player) event.getEntity();
-            
-            if (immunePlayers.contains(player.getUniqueId())) {
-                // Cancel the damage event
-                event.setCancelled(true);
-                
-                // Visual feedback
-                player.getWorld().strikeLightningEffect(player.getLocation());
-            }
+        if (!(event.getEntity() instanceof Player player)) {
+            return;
+        }
+        if (immunePlayers.contains(player.getUniqueId())) {
+            event.setCancelled(true);
+            player.getWorld().strikeLightningEffect(player.getLocation());
+            player.getWorld().playSound(player.getLocation(), Sound.ITEM_SHIELD_BLOCK, 0.9f, 1.4f);
+            player.getWorld().spawnParticle(Particle.ENCHANTED_HIT, player.getLocation().add(0, 1, 0), 12, 0.3, 0.3, 0.3, 0.1);
         }
     }
 }
