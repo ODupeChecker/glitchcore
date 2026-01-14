@@ -1,13 +1,12 @@
 package org.nu11ified.glitchSMP.manager;
 
-import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.nu11ified.glitchSMP.GlitchSMP;
 import org.nu11ified.glitchSMP.glitch.GlitchType;
+import org.nu11ified.glitchSMP.item.GlitchItemFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,6 +23,7 @@ import java.util.logging.Level;
  */
 public class RecipeManager {
     private final GlitchSMP plugin;
+    private final GlitchItemFactory glitchItemFactory;
     private final Map<GlitchType, ShapedRecipe> registeredRecipes = new HashMap<>();
     
     /**
@@ -31,8 +31,9 @@ public class RecipeManager {
      * 
      * @param plugin The main plugin instance
      */
-    public RecipeManager(GlitchSMP plugin) {
+    public RecipeManager(GlitchSMP plugin, GlitchItemFactory glitchItemFactory) {
         this.plugin = plugin;
+        this.glitchItemFactory = glitchItemFactory;
     }
     
     /**
@@ -188,29 +189,7 @@ public class RecipeManager {
      * @return The glitch item
      */
     private ItemStack createGlitchItem(GlitchType glitchType) {
-        // Use a custom item (e.g., NETHER_STAR) to represent glitches
-        ItemStack item = new ItemStack(Material.NETHER_STAR);
-        ItemMeta meta = item.getItemMeta();
-        
-        if (meta != null) {
-            meta.setDisplayName(ChatColor.LIGHT_PURPLE + glitchType.getName());
-            
-            // Add lore
-            java.util.List<String> lore = new java.util.ArrayList<>();
-            lore.add(ChatColor.GRAY + glitchType.getDescription());
-            lore.add("");
-            lore.add(ChatColor.YELLOW + "Right-click to equip this glitch");
-            lore.add(ChatColor.YELLOW + "Use /glitch list to see your glitches");
-            
-            meta.setLore(lore);
-            
-            // Make it unbreakable and add custom model data
-            meta.setUnbreakable(true);
-            
-            item.setItemMeta(meta);
-        }
-        
-        return item;
+        return glitchItemFactory.createGlitchItem(glitchType);
     }
     
     /**

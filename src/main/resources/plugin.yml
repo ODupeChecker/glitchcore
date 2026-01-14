@@ -10,29 +10,28 @@ website: https://github.com/nu11ified
 commands:
   glitch:
     description: Main command for the Glitch SMP plugin
-    usage: /<command> <give|equip|unequip|list> [player] [glitch]
+    usage: /<command> <list|view|help> [player]
     permission: glitchsmp.command.glitch
     aliases: [g]
+  glitches:
+    description: Opens the operator glitch item GUI
+    usage: /<command>
+    permission: glitchsmp.command.glitches
+  withdraw:
+    description: Withdraw an equipped glitch back into an item
+    usage: /<command> [1|2]
+    permission: glitchsmp.command.withdraw
 
 permissions:
   glitchsmp.command.glitch:
     description: Allows use of the /glitch command
     default: true
-  glitchsmp.command.glitch.give:
-    description: Allows giving glitches to players
-    default: op
   glitchsmp.command.glitch.list:
     description: Allows listing available glitches
     default: true
-  glitchsmp.command.glitch.equip:
-    description: Allows equipping glitches
-    default: true
-  glitchsmp.command.glitch.unequip:
-    description: Allows unequipping glitches
-    default: true
-  glitchsmp.command.glitch.reset:
-    description: Allows resetting player glitch crafting counts
+  glitchsmp.command.glitches:
+    description: Allows opening the glitches operator GUI
     default: op
-  glitchsmp.command.glitch.status:
-    description: Allows viewing player glitch status
-    default: op
+  glitchsmp.command.withdraw:
+    description: Allows withdrawing equipped glitches
+    default: true

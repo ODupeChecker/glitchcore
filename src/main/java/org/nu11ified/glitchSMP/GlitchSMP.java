@@ -8,8 +8,11 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.nu11ified.glitchSMP.command.GlitchCommand;
+import org.nu11ified.glitchSMP.command.GlitchesCommand;
+import org.nu11ified.glitchSMP.command.WithdrawCommand;
 import org.nu11ified.glitchSMP.display.GlitchDisplay;
 import org.nu11ified.glitchSMP.glitch.GlitchFactory;
+import org.nu11ified.glitchSMP.item.GlitchItemFactory;
 import org.nu11ified.glitchSMP.manager.GlitchManager;
 import org.nu11ified.glitchSMP.manager.RecipeManager;
 import org.nu11ified.glitchSMP.manager.ActivationManager;
@@ -25,6 +28,7 @@ public final class GlitchSMP extends JavaPlugin implements Listener {
     private RecipeManager recipeManager;
     private ActivationManager activationManager;
     private CraftingLimiter craftingLimiter;
+    private GlitchItemFactory glitchItemFactory;
 
     @Override
     public void onEnable() {
@@ -32,17 +36,25 @@ public final class GlitchSMP extends JavaPlugin implements Listener {
         glitchFactory = new GlitchFactory(this);
         glitchManager = new GlitchManager(this);
         glitchDisplay = new GlitchDisplay(this, glitchManager);
-        recipeManager = new RecipeManager(this);
-        activationManager = new ActivationManager(this, glitchManager);
-        craftingLimiter = new CraftingLimiter(this, glitchManager);
+        glitchItemFactory = new GlitchItemFactory(this);
+        recipeManager = new RecipeManager(this, glitchItemFactory);
+        activationManager = new ActivationManager(this, glitchManager, glitchItemFactory);
+        craftingLimiter = new CraftingLimiter(glitchManager, glitchItemFactory);
         
         // Load and register crafting recipes
         recipeManager.loadRecipes();
         
         // Register command
-        GlitchCommand glitchCommand = new GlitchCommand(this, glitchManager, glitchFactory, craftingLimiter);
+        GlitchCommand glitchCommand = new GlitchCommand(this, glitchManager);
         getCommand("glitch").setExecutor(glitchCommand);
         getCommand("glitch").setTabCompleter(glitchCommand);
+        
+        GlitchesCommand glitchesCommand = new GlitchesCommand(glitchItemFactory);
+        getCommand("glitches").setExecutor(glitchesCommand);
+        
+        WithdrawCommand withdrawCommand = new WithdrawCommand(glitchManager, glitchItemFactory);
+        getCommand("withdraw").setExecutor(withdrawCommand);
+        getCommand("withdraw").setTabCompleter(withdrawCommand);
         
         // Register event listeners
         getServer().getPluginManager().registerEvents(this, this);
@@ -158,5 +170,14 @@ public final class GlitchSMP extends JavaPlugin implements Listener {
      */
     public CraftingLimiter getCraftingLimiter() {
         return craftingLimiter;
+    }
+    
+    /**
+     * Gets the glitch item factory instance
+     *
+     * @return The glitch item factory
+     */
+    public GlitchItemFactory getGlitchItemFactory() {
+        return glitchItemFactory;
     }
 }
