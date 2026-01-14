@@ -1,0 +1,30 @@
+{
+  "parent": "item/generated",
+  "textures": {"layer0": "item/clay_ball"},
+  "overrides": [
+      {"predicate":{"custom_model_data":1},"model":"custom/glitches/glitch_token_g"},
+      {"predicate":{"custom_model_data":2},"model":"custom/glitches/freeze_g"},
+      {"predicate":{"custom_model_data":3},"model":"custom/glitches/dirt_g"},
+      {"predicate":{"custom_model_data":4},"model":"custom/glitches/redstone_g"},
+      {"predicate":{"custom_model_data":5},"model":"custom/glitches/enchantedbook_g"},
+      {"predicate":{"custom_model_data":6},"model":"custom/glitches/virus_g"},
+      {"predicate":{"custom_model_data":7},"model":"custom/glitches/windcharge_g"},
+      {"predicate":{"custom_model_data":8},"model":"custom/glitches/firework_g"},
+      {"predicate":{"custom_model_data":9},"model":"custom/glitches/hypnosis_g"},
+      {"predicate":{"custom_model_data":10},"model":"custom/glitches/moon_g"},
+      {"predicate":{"custom_model_data":11},"model":"custom/glitches/horsetamer_g"},
+      {"predicate":{"custom_model_data":12},"model":"custom/glitches/telekinesis_g"},
+      {"predicate":{"custom_model_data":13},"model":"custom/glitches/raycast_g"},
+      {"predicate":{"custom_model_data":14},"model":"custom/glitches/bedrock_g"},
+      {"predicate":{"custom_model_data":15},"model":"custom/glitches/teleport_g"},
+      {"predicate":{"custom_model_data":16},"model":"custom/glitches/inventory_g"},
+      {"predicate":{"custom_model_data":17},"model":"custom/glitches/rewind_g"},
+      {"predicate":{"custom_model_data":18},"model":"custom/glitches/border_g"},
+      {"predicate":{"custom_model_data":19},"model":"custom/glitches/immunity_g"},
+      {"predicate":{"custom_model_data":20},"model":"custom/glitches/dimensional_g"},
+      {"predicate":{"custom_model_data":21},"model":"custom/glitches/soul_splitter"},
+      {"predicate":{"custom_model_data":22},"model":"custom/glitches/morph_g"},
+      {"predicate":{"custom_model_data":23},"model":"custom/glitches/voodoo_g"}
+
+  ]
+}

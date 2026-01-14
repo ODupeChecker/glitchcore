@@ -1,0 +1,9 @@
+{
+  "parent": "item/handheld",
+  "textures": {"layer0": "item/stick"},
+  "overrides": [
+      {"predicate":{"custom_model_data":1},"model":"custom/misc/losers_club_sign1"},
+      {"predicate":{"custom_model_data":2},"model":"custom/misc/losers_club_sign2"},
+      {"predicate":{"custom_model_data":3},"model":"custom/misc/losers_club_sign3"}
+  ]
+}

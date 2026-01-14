@@ -1,0 +1,8 @@
+{
+  "parent": "item/generated",
+  "textures": {"layer0": "item/flint"},
+  "overrides": [
+      {"predicate":{"custom_model_data":1},"model":"custom/misc/player_hologram"},
+      {"predicate":{"custom_model_data":2},"model":"custom/misc/losers_club"}
+  ]
+}
