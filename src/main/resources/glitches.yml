@@ -99,7 +99,7 @@ perGlitch:
     durationSeconds: 10
     cooldownSeconds: 120
   FREEZE:
-    durationSeconds: 5
+    durationSeconds: 10
     cooldownSeconds: 90
     baseDamage: 2.0
   WINDBURST:

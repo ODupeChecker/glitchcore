@@ -33,7 +33,7 @@ public enum GlitchType {
     ),
     REWIND(
         "Rewind Glitch",
-        "Save your location and snap back within the window.",
+        "Warp back to where you activated the glitch.",
         minutesToMillis(1),
         secondsToMillis(15),
         17,
@@ -41,7 +41,7 @@ public enum GlitchType {
     ),
     CHUNK(
         "Chunk Glitch",
-        "Creates a one-chunk border only you can exit.",
+        "Create a one-chunk border no one can cross.",
         minutesToMillis(2),
         secondsToMillis(10),
         18,
@@ -81,9 +81,9 @@ public enum GlitchType {
     ),
     FREEZE(
         "Freeze Glitch",
-        "Freeze chained targets in place.",
+        "Hit a target in 10s to freeze them in ice.",
         minutesToMillis(1) + secondsToMillis(30),
-        secondsToMillis(5),
+        secondsToMillis(10),
         2,
         ""
     ),
@@ -97,9 +97,9 @@ public enum GlitchType {
     ),
     HYPNOSIS(
         "Hypnosis Glitch",
-        "Force held Book & Quill targets to sign and drop it.",
+        "Next hit forces a target to click the green.",
         minutesToMillis(2),
-        0,
+        secondsToMillis(6),
         9,
         ""
     ),

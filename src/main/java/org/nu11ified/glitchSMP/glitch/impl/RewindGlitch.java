@@ -1,13 +1,11 @@
 package org.nu11ified.glitchSMP.glitch.impl;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
-import org.bukkit.scheduler.BukkitTask;
 import org.nu11ified.glitchSMP.GlitchSMP;
 import org.nu11ified.glitchSMP.config.GlitchSettings;
 import org.nu11ified.glitchSMP.effects.GlitchEffects;
@@ -20,10 +18,8 @@ import java.util.Map;
 import java.util.UUID;
 
 public class RewindGlitch extends Glitch {
-    private final GlitchSMP plugin;
     private final GlitchEffects effects;
     private final Map<UUID, RewindState> states = new HashMap<>();
-    private final Map<UUID, BukkitTask> expiryTasks = new HashMap<>();
 
     public RewindGlitch(GlitchSMP plugin, GlitchSettings.GlitchProfile profile) {
         super(
@@ -33,39 +29,25 @@ public class RewindGlitch extends Glitch {
             profile.cooldownMillis(),
             profile.durationMillis()
         );
-        this.plugin = plugin;
         this.effects = plugin.getGlitchEffects();
     }
 
     @Override
     protected void onActivate(Player player) {
         UUID uuid = player.getUniqueId();
-        if (states.containsKey(uuid)) {
-            restore(player, states.remove(uuid));
-            BukkitTask task = expiryTasks.remove(uuid);
-            if (task != null) {
-                task.cancel();
-            }
-            return;
-        }
         states.put(uuid, RewindState.capture(player));
         effects.playActivation(player, getType());
         player.getWorld().spawnParticle(Particle.END_ROD, player.getLocation().add(0, 1, 0), 12, 0.4, 0.4, 0.4, 0.02);
         player.playSound(player.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_CHIME, 1.0f, 1.4f);
 
-        long durationTicks = Math.max(20L, getDurationMillis() / 50L);
-        expiryTasks.put(uuid, Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            states.remove(uuid);
-        }, durationTicks));
     }
 
     @Override
     protected void onDeactivate(Player player) {
         UUID uuid = player.getUniqueId();
-        states.remove(uuid);
-        BukkitTask task = expiryTasks.remove(uuid);
-        if (task != null) {
-            task.cancel();
+        RewindState state = states.remove(uuid);
+        if (state != null) {
+            restore(player, state);
         }
     }
 
