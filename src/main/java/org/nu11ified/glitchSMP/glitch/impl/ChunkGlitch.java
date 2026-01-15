@@ -72,15 +72,17 @@ public class ChunkGlitch extends Glitch implements Listener {
         }
         for (Map.Entry<UUID, Chunk> entry : activeChunks.entrySet()) {
             Chunk chunk = entry.getValue();
-            if (player.getUniqueId().equals(entry.getKey())) {
+            Chunk fromChunk = event.getFrom().getChunk();
+            Chunk toChunk = event.getTo().getChunk();
+            boolean fromBorder = fromChunk.equals(chunk);
+            boolean toBorder = toChunk.equals(chunk);
+            if (!fromBorder && !toBorder) {
                 continue;
             }
-            if (!player.getLocation().getChunk().equals(chunk)) {
-                continue;
-            }
-            if (!event.getTo().getChunk().equals(chunk)) {
+            if (fromBorder != toBorder) {
                 event.setTo(event.getFrom());
                 player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_PLACE, 0.6f, 0.5f);
+                break;
             }
         }
     }
@@ -90,14 +92,17 @@ public class ChunkGlitch extends Glitch implements Listener {
         int minZ = chunk.getZ() << 4;
         int maxX = minX + 16;
         int maxZ = minZ + 16;
-        int y = chunk.getWorld().getHighestBlockYAt(minX + 8, minZ + 8) + 1;
-        for (int x = minX; x <= maxX; x++) {
-            chunk.getWorld().spawnParticle(Particle.DUST, x + 0.5, y, minZ + 0.5, 1, new Particle.DustOptions(org.bukkit.Color.AQUA, 1.2f));
-            chunk.getWorld().spawnParticle(Particle.DUST, x + 0.5, y, maxZ + 0.5, 1, new Particle.DustOptions(org.bukkit.Color.AQUA, 1.2f));
-        }
-        for (int z = minZ; z <= maxZ; z++) {
-            chunk.getWorld().spawnParticle(Particle.DUST, minX + 0.5, y, z + 0.5, 1, new Particle.DustOptions(org.bukkit.Color.AQUA, 1.2f));
-            chunk.getWorld().spawnParticle(Particle.DUST, maxX + 0.5, y, z + 0.5, 1, new Particle.DustOptions(org.bukkit.Color.AQUA, 1.2f));
+        int baseY = chunk.getWorld().getHighestBlockYAt(minX + 8, minZ + 8) + 1;
+        for (int yOffset = 0; yOffset <= 5; yOffset++) {
+            int y = baseY + yOffset;
+            for (int x = minX; x <= maxX; x++) {
+                chunk.getWorld().spawnParticle(Particle.DUST, x + 0.5, y, minZ + 0.5, 2, new Particle.DustOptions(org.bukkit.Color.AQUA, 1.4f));
+                chunk.getWorld().spawnParticle(Particle.DUST, x + 0.5, y, maxZ + 0.5, 2, new Particle.DustOptions(org.bukkit.Color.AQUA, 1.4f));
+            }
+            for (int z = minZ; z <= maxZ; z++) {
+                chunk.getWorld().spawnParticle(Particle.DUST, minX + 0.5, y, z + 0.5, 2, new Particle.DustOptions(org.bukkit.Color.AQUA, 1.4f));
+                chunk.getWorld().spawnParticle(Particle.DUST, maxX + 0.5, y, z + 0.5, 2, new Particle.DustOptions(org.bukkit.Color.AQUA, 1.4f));
+            }
         }
     }
 }

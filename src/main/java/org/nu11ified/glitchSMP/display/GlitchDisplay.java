@@ -93,10 +93,23 @@ public class GlitchDisplay {
                 displayBuilder.append(EMPTY_SLOT_ICON);
             } else {
                 displayBuilder.append(resourcePackRegistry.getIcon(glitch.getType()));
+                if (i == 1) {
+                    appendLeftTimer(displayBuilder, glitch);
+                }
             }
         }
         
         sendActionBar(player, displayBuilder.toString());
+    }
+
+    private void appendLeftTimer(StringBuilder displayBuilder, Glitch glitch) {
+        if (glitch.isActive()) {
+            long seconds = Math.max(1, (glitch.getRemainingDuration() + 999) / 1000);
+            displayBuilder.append(ChatColor.AQUA).append(seconds).append("s");
+        } else if (glitch.isOnCooldown()) {
+            long seconds = Math.max(1, (glitch.getRemainingCooldown() + 999) / 1000);
+            displayBuilder.append(ChatColor.RED).append(seconds).append("s");
+        }
     }
     
     /**
