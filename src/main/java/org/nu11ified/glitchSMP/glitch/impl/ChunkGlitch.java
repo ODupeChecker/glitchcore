@@ -90,14 +90,19 @@ public class ChunkGlitch extends Glitch implements Listener {
         int minZ = chunk.getZ() << 4;
         int maxX = minX + 16;
         int maxZ = minZ + 16;
-        int y = chunk.getWorld().getHighestBlockYAt(minX + 8, minZ + 8) + 1;
+        int baseY = chunk.getWorld().getHighestBlockYAt(minX + 8, minZ + 8) + 1;
+        int height = 6;
         for (int x = minX; x <= maxX; x++) {
-            chunk.getWorld().spawnParticle(Particle.DUST, x + 0.5, y, minZ + 0.5, 1, new Particle.DustOptions(org.bukkit.Color.AQUA, 1.2f));
-            chunk.getWorld().spawnParticle(Particle.DUST, x + 0.5, y, maxZ + 0.5, 1, new Particle.DustOptions(org.bukkit.Color.AQUA, 1.2f));
+            for (int y = baseY; y < baseY + height; y++) {
+                chunk.getWorld().spawnParticle(Particle.CRIT, x + 0.5, y, minZ + 0.5, 8, 0.15, 0.15, 0.15, 0.1);
+                chunk.getWorld().spawnParticle(Particle.CRIT, x + 0.5, y, maxZ + 0.5, 8, 0.15, 0.15, 0.15, 0.1);
+            }
         }
         for (int z = minZ; z <= maxZ; z++) {
-            chunk.getWorld().spawnParticle(Particle.DUST, minX + 0.5, y, z + 0.5, 1, new Particle.DustOptions(org.bukkit.Color.AQUA, 1.2f));
-            chunk.getWorld().spawnParticle(Particle.DUST, maxX + 0.5, y, z + 0.5, 1, new Particle.DustOptions(org.bukkit.Color.AQUA, 1.2f));
+            for (int y = baseY; y < baseY + height; y++) {
+                chunk.getWorld().spawnParticle(Particle.CRIT, minX + 0.5, y, z + 0.5, 8, 0.15, 0.15, 0.15, 0.1);
+                chunk.getWorld().spawnParticle(Particle.CRIT, maxX + 0.5, y, z + 0.5, 8, 0.15, 0.15, 0.15, 0.1);
+            }
         }
     }
 }
