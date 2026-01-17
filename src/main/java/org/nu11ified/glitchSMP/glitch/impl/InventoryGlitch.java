@@ -116,21 +116,21 @@ public class InventoryGlitch extends Glitch implements Listener {
     }
 
     private void shuffleInventory(Player target) {
-        ItemStack[] contents = target.getInventory().getContents();
+        ItemStack[] contents = target.getInventory().getStorageContents();
         List<ItemStack> items = new ArrayList<>();
         Collections.addAll(items, contents);
         Collections.shuffle(items);
-        target.getInventory().setContents(items.toArray(new ItemStack[0]));
+        target.getInventory().setStorageContents(items.toArray(new ItemStack[0]));
         target.updateInventory();
     }
 
     private record InventorySnapshot(ItemStack[] contents, ItemStack[] armor, ItemStack offhand) {
         static InventorySnapshot from(Player player) {
-            return new InventorySnapshot(player.getInventory().getContents(), player.getInventory().getArmorContents(), player.getInventory().getItemInOffHand());
+            return new InventorySnapshot(player.getInventory().getStorageContents(), player.getInventory().getArmorContents(), player.getInventory().getItemInOffHand());
         }
 
         void restore(Player player) {
-            player.getInventory().setContents(contents);
+            player.getInventory().setStorageContents(contents);
             player.getInventory().setArmorContents(armor);
             player.getInventory().setItemInOffHand(offhand);
             player.updateInventory();

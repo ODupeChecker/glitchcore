@@ -56,6 +56,10 @@ public class HypnosisGlitch extends Glitch implements Listener {
             player.sendMessage("§cNo target found for Hypnosis Glitch.");
             return;
         }
+        if (sessions.containsKey(target.getUniqueId())) {
+            player.sendMessage("§cThat player is already hypnotized.");
+            return;
+        }
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         Inventory inventory = Bukkit.createInventory(target, INVENTORY_SIZE, HYPNOSIS_TITLE);
         fillWithRed(inventory);
@@ -122,10 +126,20 @@ public class HypnosisGlitch extends Glitch implements Listener {
             return;
         }
         HypnosisSession session = sessions.get(player.getUniqueId());
-        if (session == null || session.isCompleted()) {
+        if (session == null || session.isCompleted() || session.isReopening()) {
             return;
         }
-        Bukkit.getScheduler().runTask(plugin, () -> player.openInventory(session.inventory()));
+        session.setReopening(true);
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            HypnosisSession currentSession = sessions.get(player.getUniqueId());
+            if (currentSession == null || currentSession.isCompleted()) {
+                return;
+            }
+            if (player.getOpenInventory().getTopInventory() != currentSession.inventory()) {
+                player.openInventory(currentSession.inventory());
+            }
+            currentSession.setReopening(false);
+        }, 1L);
     }
 
     private void refreshGreenSlot(HypnosisSession session) {
@@ -157,6 +171,7 @@ public class HypnosisGlitch extends Glitch implements Listener {
         private int greenSlot;
         private int progress;
         private boolean completed;
+        private boolean reopening;
 
         private HypnosisSession(Inventory inventory, int greenSlot) {
             this.inventory = inventory;
@@ -190,6 +205,14 @@ public class HypnosisGlitch extends Glitch implements Listener {
 
         public void markCompleted() {
             completed = true;
+        }
+
+        public boolean isReopening() {
+            return reopening;
+        }
+
+        public void setReopening(boolean reopening) {
+            this.reopening = reopening;
         }
     }
 }

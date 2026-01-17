@@ -81,7 +81,7 @@ public enum GlitchType {
     ),
     FREEZE(
         "Freeze Glitch",
-        "Freeze chained targets in place.",
+        "Upon activation, hit a player to freeze them in place.",
         minutesToMillis(1) + secondsToMillis(30),
         secondsToMillis(5),
         2,
