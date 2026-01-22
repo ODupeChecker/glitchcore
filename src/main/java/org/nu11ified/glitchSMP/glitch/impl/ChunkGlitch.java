@@ -2,8 +2,10 @@ package org.nu11ified.glitchSMP.glitch.impl;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
+import org.bukkit.Color;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
@@ -25,6 +27,7 @@ public class ChunkGlitch extends Glitch implements Listener {
     private final GlitchEffects effects;
     private final Map<UUID, Chunk> activeChunks = new HashMap<>();
     private final Map<UUID, BukkitTask> visualTasks = new HashMap<>();
+    private final Particle.DustOptions borderDust = new Particle.DustOptions(Color.fromRGB(255, 32, 32), 1.8f);
 
     public ChunkGlitch(GlitchSMP plugin, GlitchSettings.GlitchProfile profile) {
         super(
@@ -47,7 +50,7 @@ public class ChunkGlitch extends Glitch implements Listener {
         effects.playActivation(player, getType());
         player.getWorld().playSound(player.getLocation(), Sound.BLOCK_BEACON_AMBIENT, 0.7f, 0.6f);
 
-        visualTasks.put(uuid, Bukkit.getScheduler().runTaskTimer(plugin, () -> spawnChunkBorder(chunk), 0L, 20L));
+        visualTasks.put(uuid, Bukkit.getScheduler().runTaskTimer(plugin, () -> spawnChunkBorder(chunk), 0L, 10L));
     }
 
     @Override
@@ -88,21 +91,36 @@ public class ChunkGlitch extends Glitch implements Listener {
         int minZ = chunk.getZ() << 4;
         int maxX = minX + 16;
         int maxZ = minZ + 16;
-        int centerY = chunk.getWorld().getHighestBlockYAt(minX + 8, minZ + 8) + 1;
-        int minY = Math.max(chunk.getWorld().getMinHeight(), centerY - 20);
-        int maxY = Math.min(chunk.getWorld().getMaxHeight() - 1, centerY + 20);
-        Particle particle = plugin.getGlitchSettings().getChunkBorderParticle();
+        World world = chunk.getWorld();
+        int minY = world.getMinHeight();
+        int maxY = world.getMaxHeight() - 1;
+        int yStep = 2;
+        Particle particle = resolveBorderParticle();
+        Particle.DustOptions dustOptions = particle.getDataType() == Particle.DustOptions.class ? borderDust : null;
+
         for (int x = minX; x <= maxX; x++) {
-            for (int y = minY; y <= maxY; y++) {
-                chunk.getWorld().spawnParticle(particle, x + 0.5, y, minZ + 0.5, 8, 0.15, 0.15, 0.15, 0.1);
-                chunk.getWorld().spawnParticle(particle, x + 0.5, y, maxZ + 0.5, 8, 0.15, 0.15, 0.15, 0.1);
+            for (int y = minY; y <= maxY; y += yStep) {
+                spawnBorderParticle(world, particle, dustOptions, x + 0.5, y + 0.5, minZ + 0.5);
+                spawnBorderParticle(world, particle, dustOptions, x + 0.5, y + 0.5, maxZ + 0.5);
             }
         }
         for (int z = minZ; z <= maxZ; z++) {
-            for (int y = minY; y <= maxY; y++) {
-                chunk.getWorld().spawnParticle(particle, minX + 0.5, y, z + 0.5, 8, 0.15, 0.15, 0.15, 0.1);
-                chunk.getWorld().spawnParticle(particle, maxX + 0.5, y, z + 0.5, 8, 0.15, 0.15, 0.15, 0.1);
+            for (int y = minY; y <= maxY; y += yStep) {
+                spawnBorderParticle(world, particle, dustOptions, minX + 0.5, y + 0.5, z + 0.5);
+                spawnBorderParticle(world, particle, dustOptions, maxX + 0.5, y + 0.5, z + 0.5);
             }
         }
+    }
+
+    private Particle resolveBorderParticle() {
+        Particle particle = plugin.getGlitchSettings().getChunkBorderParticle();
+        if (particle.getDataType() == Void.class || particle.getDataType() == Particle.DustOptions.class) {
+            return particle;
+        }
+        return Particle.REDSTONE;
+    }
+
+    private void spawnBorderParticle(World world, Particle particle, Particle.DustOptions dustOptions, double x, double y, double z) {
+        world.spawnParticle(particle, x, y, z, 2, 0.0, 0.0, 0.0, 0.0, dustOptions, true);
     }
 }
