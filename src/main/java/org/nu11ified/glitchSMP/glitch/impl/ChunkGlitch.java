@@ -117,7 +117,7 @@ public class ChunkGlitch extends Glitch implements Listener {
         if (particle.getDataType() == Void.class || particle.getDataType() == Particle.DustOptions.class) {
             return particle;
         }
-        return Particle.REDSTONE;
+        return Particle.DUST;
     }
 
     private void spawnBorderParticle(World world, Particle particle, Particle.DustOptions dustOptions, double x, double y, double z) {
