@@ -75,10 +75,7 @@ public class ChunkGlitch extends Glitch implements Listener {
             if (player.getUniqueId().equals(entry.getKey())) {
                 continue;
             }
-            if (!player.getLocation().getChunk().equals(chunk)) {
-                continue;
-            }
-            if (!event.getTo().getChunk().equals(chunk)) {
+            if (!event.getFrom().getChunk().equals(chunk) && event.getTo().getChunk().equals(chunk)) {
                 event.setTo(event.getFrom());
                 player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_PLACE, 0.6f, 0.5f);
             }
