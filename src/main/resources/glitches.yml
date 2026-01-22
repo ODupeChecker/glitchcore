@@ -86,6 +86,7 @@ perGlitch:
   CHUNK:
     durationSeconds: 10
     cooldownSeconds: 120
+    borderParticle: CRIT
   VIRUS:
     durationSeconds: 10
     cooldownSeconds: 120
