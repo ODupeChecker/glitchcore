@@ -75,11 +75,9 @@ public class ChunkGlitch extends Glitch implements Listener {
             if (player.getUniqueId().equals(entry.getKey())) {
                 continue;
             }
-            if (!player.getLocation().getChunk().equals(chunk)) {
-                continue;
-            }
-            if (!event.getTo().getChunk().equals(chunk)) {
-                event.setTo(event.getFrom());
+            if (event.getFrom().getChunk().equals(chunk) && !event.getTo().getChunk().equals(chunk)) {
+                event.setCancelled(true);
+                player.setNoDamageTicks(0);
                 player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_PLACE, 0.6f, 0.5f);
             }
         }
@@ -90,18 +88,20 @@ public class ChunkGlitch extends Glitch implements Listener {
         int minZ = chunk.getZ() << 4;
         int maxX = minX + 16;
         int maxZ = minZ + 16;
-        int baseY = chunk.getWorld().getHighestBlockYAt(minX + 8, minZ + 8) + 1;
-        int height = 6;
+        int centerY = chunk.getWorld().getHighestBlockYAt(minX + 8, minZ + 8) + 1;
+        int minY = Math.max(chunk.getWorld().getMinHeight(), centerY - 20);
+        int maxY = Math.min(chunk.getWorld().getMaxHeight() - 1, centerY + 20);
+        Particle particle = plugin.getGlitchSettings().getChunkBorderParticle();
         for (int x = minX; x <= maxX; x++) {
-            for (int y = baseY; y < baseY + height; y++) {
-                chunk.getWorld().spawnParticle(Particle.CRIT, x + 0.5, y, minZ + 0.5, 8, 0.15, 0.15, 0.15, 0.1);
-                chunk.getWorld().spawnParticle(Particle.CRIT, x + 0.5, y, maxZ + 0.5, 8, 0.15, 0.15, 0.15, 0.1);
+            for (int y = minY; y <= maxY; y++) {
+                chunk.getWorld().spawnParticle(particle, x + 0.5, y, minZ + 0.5, 8, 0.15, 0.15, 0.15, 0.1);
+                chunk.getWorld().spawnParticle(particle, x + 0.5, y, maxZ + 0.5, 8, 0.15, 0.15, 0.15, 0.1);
             }
         }
         for (int z = minZ; z <= maxZ; z++) {
-            for (int y = baseY; y < baseY + height; y++) {
-                chunk.getWorld().spawnParticle(Particle.CRIT, minX + 0.5, y, z + 0.5, 8, 0.15, 0.15, 0.15, 0.1);
-                chunk.getWorld().spawnParticle(Particle.CRIT, maxX + 0.5, y, z + 0.5, 8, 0.15, 0.15, 0.15, 0.1);
+            for (int y = minY; y <= maxY; y++) {
+                chunk.getWorld().spawnParticle(particle, minX + 0.5, y, z + 0.5, 8, 0.15, 0.15, 0.15, 0.1);
+                chunk.getWorld().spawnParticle(particle, maxX + 0.5, y, z + 0.5, 8, 0.15, 0.15, 0.15, 0.1);
             }
         }
     }

@@ -1,5 +1,6 @@
 package org.nu11ified.glitchSMP.config;
 
+import org.bukkit.Particle;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -106,6 +107,19 @@ public class GlitchSettings {
 
     public VisualDefaults getVisualDefaults() {
         return visualDefaults;
+    }
+
+    public Particle getChunkBorderParticle() {
+        String particleName = config.getString("perGlitch.CHUNK.borderParticle", Particle.CRIT.name());
+        if (particleName == null) {
+            return Particle.CRIT;
+        }
+        try {
+            Particle particle = Particle.valueOf(particleName.toUpperCase());
+            return particle.getDataType() == Void.class ? particle : Particle.CRIT;
+        } catch (IllegalArgumentException ex) {
+            return Particle.CRIT;
+        }
     }
 
     public CombatDefaults getCombatDefaults() {

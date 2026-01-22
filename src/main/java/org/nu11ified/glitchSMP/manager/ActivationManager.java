@@ -153,18 +153,7 @@ public class ActivationManager implements Listener {
         // Update the sneaking state
         playerSneaking.put(playerUUID, event.isSneaking());
         
-        // Show which glitch slot will be used
-        if (event.isSneaking()) {
-            Glitch glitch = glitchManager.getEquippedGlitch(player, 1);
-            if (glitch != null) {
-                player.sendMessage(ChatColor.YELLOW + "Left glitch slot selected (use offhand keybind to activate)");
-            }
-        } else {
-            Glitch glitch = glitchManager.getEquippedGlitch(player, 0);
-            if (glitch != null) {
-                player.sendMessage(ChatColor.YELLOW + "Right glitch slot selected (use offhand keybind to activate)");
-            }
-        }
+        // No slot selection message.
     }
     
     /**
