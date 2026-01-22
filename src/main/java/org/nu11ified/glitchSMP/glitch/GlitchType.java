@@ -49,7 +49,7 @@ public enum GlitchType {
     ),
     VIRUS(
         "Virus Glitch",
-        "Pass a green-screen infection to chained targets.",
+        "Prime the next hit to blind the target.",
         minutesToMillis(2),
         secondsToMillis(10),
         6,

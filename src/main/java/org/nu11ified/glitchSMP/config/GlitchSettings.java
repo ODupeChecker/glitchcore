@@ -115,7 +115,8 @@ public class GlitchSettings {
             return Particle.CRIT;
         }
         try {
-            return Particle.valueOf(particleName.toUpperCase());
+            Particle particle = Particle.valueOf(particleName.toUpperCase());
+            return particle.getDataType() == Void.class ? particle : Particle.CRIT;
         } catch (IllegalArgumentException ex) {
             return Particle.CRIT;
         }

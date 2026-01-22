@@ -89,7 +89,6 @@ public class FreezeGlitch extends Glitch implements Listener {
     private void applyFreeze(Player source, Player victim) {
         int durationTicks = (int) (getDurationMillis() / 50L);
         victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, durationTicks, 255, false, true, true));
-        victim.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, durationTicks, 200, false, true, true));
         spawnIcePrison(victim, durationTicks);
         victim.getWorld().spawnParticle(Particle.SNOWFLAKE, victim.getLocation().add(0, 1, 0), 20, 0.4, 0.6, 0.4, 0.05);
         victim.getWorld().playSound(victim.getLocation(), Sound.BLOCK_GLASS_BREAK, 0.7f, 1.1f);
