@@ -11,6 +11,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -21,8 +22,10 @@ import org.nu11ified.glitchSMP.glitch.Glitch;
 import org.nu11ified.glitchSMP.glitch.GlitchType;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 
 public class HypnosisGlitch extends Glitch implements Listener {
@@ -32,6 +35,7 @@ public class HypnosisGlitch extends Glitch implements Listener {
     private static final ItemStack RED_GLASS = createPane(Material.RED_STAINED_GLASS_PANE, "§cEscape?");
     private static final ItemStack GREEN_GLASS = createPane(Material.LIME_STAINED_GLASS_PANE, "§aClick me!");
     private static final Random RANDOM = new Random();
+    private static final Set<UUID> ACTIVE_TARGETS = new HashSet<>();
 
     private final GlitchSMP plugin;
     private final GlitchEffects effects;
@@ -56,7 +60,7 @@ public class HypnosisGlitch extends Glitch implements Listener {
             player.sendMessage("§cNo target found for Hypnosis Glitch.");
             return;
         }
-        if (sessions.containsKey(target.getUniqueId())) {
+        if (ACTIVE_TARGETS.contains(target.getUniqueId())) {
             player.sendMessage("§cThat player is already hypnotized.");
             return;
         }
@@ -66,6 +70,7 @@ public class HypnosisGlitch extends Glitch implements Listener {
         int greenSlot = RANDOM.nextInt(INVENTORY_SIZE);
         inventory.setItem(greenSlot, GREEN_GLASS.clone());
         sessions.put(target.getUniqueId(), new HypnosisSession(inventory, greenSlot));
+        ACTIVE_TARGETS.add(target.getUniqueId());
         target.openInventory(inventory);
         target.getWorld().spawnParticle(Particle.ENCHANT, target.getLocation().add(0, 1, 0), 30, 0.5, 0.6, 0.5, 0.1);
         target.getWorld().playSound(target.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1.0f, 0.7f);
@@ -94,11 +99,8 @@ public class HypnosisGlitch extends Glitch implements Listener {
             int progress = session.incrementProgress();
             if (progress >= ESCAPE_CLICKS_REQUIRED) {
                 session.markCompleted();
-                sessions.remove(player.getUniqueId());
+                clearSession(player.getUniqueId());
                 player.closeInventory();
-                if (sessions.isEmpty()) {
-                    HandlerList.unregisterAll(this);
-                }
                 return;
             }
             refreshGreenSlot(session);
@@ -142,6 +144,14 @@ public class HypnosisGlitch extends Glitch implements Listener {
         }, 1L);
     }
 
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        UUID playerId = event.getPlayer().getUniqueId();
+        if (sessions.containsKey(playerId)) {
+            clearSession(playerId);
+        }
+    }
+
     private void refreshGreenSlot(HypnosisSession session) {
         Inventory inventory = session.inventory();
         int nextSlot = RANDOM.nextInt(INVENTORY_SIZE);
@@ -164,6 +174,14 @@ public class HypnosisGlitch extends Glitch implements Listener {
             item.setItemMeta(meta);
         }
         return item;
+    }
+
+    private void clearSession(UUID playerId) {
+        sessions.remove(playerId);
+        ACTIVE_TARGETS.remove(playerId);
+        if (sessions.isEmpty()) {
+            HandlerList.unregisterAll(this);
+        }
     }
 
     private static class HypnosisSession {
