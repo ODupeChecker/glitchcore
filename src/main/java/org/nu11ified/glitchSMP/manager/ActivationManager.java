@@ -12,6 +12,7 @@ import org.nu11ified.glitchSMP.GlitchSMP;
 import org.nu11ified.glitchSMP.glitch.Glitch;
 import org.nu11ified.glitchSMP.glitch.GlitchType;
 import org.nu11ified.glitchSMP.item.GlitchItemFactory;
+import org.nu11ified.glitchSMP.util.WorldGuardHook;
 
 import java.util.HashMap;
 import java.util.List;
@@ -104,6 +105,10 @@ public class ActivationManager implements Listener {
         if (equippedGlitches.isEmpty()) {
             player.sendMessage(ChatColor.RED + "You don't have any glitches equipped!");
             player.sendMessage(ChatColor.YELLOW + "Right-click a glitch item to equip it.");
+            return;
+        }
+        if (WorldGuardHook.isInSpawnRegion(player)) {
+            player.sendMessage(ChatColor.RED + "Abilities only work outside of spawn");
             return;
         }
         

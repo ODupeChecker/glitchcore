@@ -8,6 +8,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
 import org.nu11ified.glitchSMP.effects.GlitchEffects;
 import org.nu11ified.glitchSMP.glitch.GlitchType;
+import org.nu11ified.glitchSMP.util.WorldGuardHook;
 
 public class DamageTickHelper {
     private final Plugin plugin;
@@ -20,6 +21,9 @@ public class DamageTickHelper {
 
     public void applyDamageTicks(Player source, LivingEntity target, GlitchType type, double totalDamage, int ticks, int intervalTicks, double knockbackStrength) {
         if (ticks <= 0) {
+            return;
+        }
+        if (target instanceof Player playerTarget && WorldGuardHook.isBlockedTarget(source, playerTarget)) {
             return;
         }
         double perTick = totalDamage / ticks;

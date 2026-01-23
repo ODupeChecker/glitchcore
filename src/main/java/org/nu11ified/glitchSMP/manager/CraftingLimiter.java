@@ -122,16 +122,7 @@ public class CraftingLimiter implements Listener {
         
         // Check if the picked up item is a glitch
         if (glitchItemFactory.isGlitchItem(item)) {
-            // Check if player has reached the glitch limit
-            if (hasReachedGlitchLimit(player)) {
-                event.setCancelled(true);
-                player.sendMessage(ChatColor.RED + "You can only have 2 glitches! Use /withdraw to free a slot.");
-                return;
-            }
-            
-            // Increment the crafted glitch count (since they're getting a glitch)
-            incrementCraftedGlitchCount(player);
-            player.sendMessage(ChatColor.GREEN + "You picked up a glitch! You now have " + getCraftedGlitchCount(player) + "/2 glitches.");
+            player.sendMessage(ChatColor.GREEN + "You picked up a glitch!");
         }
     }
     

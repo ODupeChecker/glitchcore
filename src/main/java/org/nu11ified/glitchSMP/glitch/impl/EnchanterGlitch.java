@@ -16,6 +16,7 @@ import org.nu11ified.glitchSMP.config.GlitchSettings;
 import org.nu11ified.glitchSMP.effects.GlitchEffects;
 import org.nu11ified.glitchSMP.glitch.Glitch;
 import org.nu11ified.glitchSMP.glitch.GlitchType;
+import org.nu11ified.glitchSMP.util.WorldGuardHook;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -76,6 +77,9 @@ public class EnchanterGlitch extends Glitch implements Listener {
             return;
         }
         if (!activePlayers.contains(player.getUniqueId())) {
+            return;
+        }
+        if (event.getEntity() instanceof Player target && WorldGuardHook.isBlockedTarget(player, target)) {
             return;
         }
         ItemStack weapon = player.getInventory().getItemInMainHand();

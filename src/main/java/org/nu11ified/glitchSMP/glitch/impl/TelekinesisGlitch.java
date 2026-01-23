@@ -19,6 +19,7 @@ import org.nu11ified.glitchSMP.config.GlitchSettings;
 import org.nu11ified.glitchSMP.effects.GlitchEffects;
 import org.nu11ified.glitchSMP.glitch.Glitch;
 import org.nu11ified.glitchSMP.glitch.GlitchType;
+import org.nu11ified.glitchSMP.util.WorldGuardHook;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -66,6 +67,9 @@ public class TelekinesisGlitch extends Glitch implements Listener {
         if (!(event.getDamager() instanceof Player player) || !(event.getEntity() instanceof Player target)) {
             return;
         }
+        if (WorldGuardHook.isBlockedTarget(player, target)) {
+            return;
+        }
         if (!primedPlayers.remove(player.getUniqueId())) {
             return;
         }
@@ -91,6 +95,10 @@ public class TelekinesisGlitch extends Glitch implements Listener {
                 return;
             }
             if (!caster.getWorld().equals(target.getWorld())) {
+                stopTelekinesisControl(targetId);
+                return;
+            }
+            if (WorldGuardHook.isBlockedTarget(caster, target)) {
                 stopTelekinesisControl(targetId);
                 return;
             }
