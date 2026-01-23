@@ -6,6 +6,7 @@ load: STARTUP
 authors: [ Nu11ified @ Github ]
 description: "A plugin that adds glitches to the Glitch SMP server. Players can equip up to two glitches at a time to change gameplay from normal running around to PVP."
 website: https://github.com/nu11ified
+softdepend: [WorldGuard]
 
 commands:
   glitch:

@@ -20,6 +20,7 @@ import org.nu11ified.glitchSMP.config.GlitchSettings;
 import org.nu11ified.glitchSMP.effects.GlitchEffects;
 import org.nu11ified.glitchSMP.glitch.Glitch;
 import org.nu11ified.glitchSMP.glitch.GlitchType;
+import org.nu11ified.glitchSMP.util.WorldGuardHook;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -58,6 +59,9 @@ public class HypnosisGlitch extends Glitch implements Listener {
         Player target = player.getTargetEntity(12) instanceof Player p ? p : null;
         if (target == null) {
             player.sendMessage("§cNo target found for Hypnosis Glitch.");
+            return;
+        }
+        if (WorldGuardHook.isBlockedTarget(player, target, plugin.getGlitchSettings().getDisabledRegion())) {
             return;
         }
         if (ACTIVE_TARGETS.contains(target.getUniqueId())) {

@@ -7,14 +7,14 @@ import org.bukkit.Sound;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Player;
+import org.bukkit.Location;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Transformation;
+import org.bukkit.util.Vector;
 import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
 import org.nu11ified.glitchSMP.GlitchSMP;
@@ -22,7 +22,10 @@ import org.nu11ified.glitchSMP.config.GlitchSettings;
 import org.nu11ified.glitchSMP.effects.GlitchEffects;
 import org.nu11ified.glitchSMP.glitch.Glitch;
 import org.nu11ified.glitchSMP.glitch.GlitchType;
+import org.nu11ified.glitchSMP.util.WorldGuardHook;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.UUID;
 
@@ -42,6 +45,7 @@ public class FreezeGlitch extends Glitch implements Listener {
     private final GlitchEffects effects;
     private final GlitchSettings.GlitchProfile profile;
     private final Set<UUID> primedPlayers = new HashSet<>();
+    private final Map<UUID, BukkitTask> freezeTasks = new HashMap<>();
 
     public FreezeGlitch(GlitchSMP plugin, GlitchSettings.GlitchProfile profile) {
         super(
@@ -77,6 +81,9 @@ public class FreezeGlitch extends Glitch implements Listener {
         if (!(event.getDamager() instanceof Player player) || !(event.getEntity() instanceof Player victim)) {
             return;
         }
+        if (WorldGuardHook.isBlockedTarget(player, victim, plugin.getGlitchSettings().getDisabledRegion())) {
+            return;
+        }
         if (!primedPlayers.remove(player.getUniqueId())) {
             return;
         }
@@ -85,7 +92,7 @@ public class FreezeGlitch extends Glitch implements Listener {
 
     private void applyFreeze(Player source, Player victim) {
         int durationTicks = (int) (getDurationMillis() / 50L);
-        victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, durationTicks, 255, false, true, true));
+        startFreezeLock(victim, durationTicks);
         spawnIcePrison(victim, durationTicks);
         victim.getWorld().spawnParticle(Particle.SNOWFLAKE, victim.getLocation().add(0, 1, 0), 20, 0.4, 0.6, 0.4, 0.05);
         victim.getWorld().playSound(victim.getLocation(), Sound.BLOCK_GLASS_BREAK, 0.7f, 1.1f);
@@ -95,9 +102,44 @@ public class FreezeGlitch extends Glitch implements Listener {
                 victim,
                 profile.baseDamage(),
                 profile.damageTicks(),
-                plugin.getGlitchSettings().getCombatDefaults().intervalTicks(),
-                plugin.getGlitchSettings().getCombatDefaults().knockbackStrength() * profile.knockbackMultiplier()
+                plugin.getGlitchSettings().getCombatDefaults().intervalTicks()
             );
+        }
+    }
+
+    private void startFreezeLock(Player victim, int durationTicks) {
+        UUID victimId = victim.getUniqueId();
+        stopFreezeLock(victimId);
+        victim.setFreezeTicks(durationTicks);
+        victim.setGravity(false);
+        victim.setVelocity(new Vector(0, 0, 0));
+        victim.setFallDistance(0f);
+        Location anchor = victim.getLocation().clone();
+        BukkitTask lockTask = plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
+            if (!victim.isOnline() || victim.isDead()) {
+                stopFreezeLock(victimId);
+                return;
+            }
+            Location current = victim.getLocation();
+            Location locked = anchor.clone();
+            locked.setYaw(current.getYaw());
+            locked.setPitch(current.getPitch());
+            victim.teleport(locked);
+            victim.setVelocity(new Vector(0, 0, 0));
+            victim.setFallDistance(0f);
+        }, 0L, 1L);
+        freezeTasks.put(victimId, lockTask);
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> stopFreezeLock(victimId), durationTicks);
+    }
+
+    private void stopFreezeLock(UUID victimId) {
+        BukkitTask task = freezeTasks.remove(victimId);
+        if (task != null) {
+            task.cancel();
+        }
+        Player victim = plugin.getServer().getPlayer(victimId);
+        if (victim != null) {
+            victim.setGravity(true);
         }
     }
 
@@ -141,24 +183,29 @@ public class FreezeGlitch extends Glitch implements Listener {
         }
     }
 
-    private void applyFreezeDamageTicks(Player source, Player victim, double totalDamage, int ticks, int intervalTicks, double knockbackStrength) {
+    private void applyFreezeDamageTicks(Player source, Player victim, double totalDamage, int ticks, int intervalTicks) {
         if (ticks <= 0) {
             return;
         }
         double perTick = totalDamage / ticks;
-        for (int i = 0; i < ticks; i++) {
-            int delay = i * intervalTicks;
-            Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                if (!victim.isDead()) {
-                    victim.damage(perTick, source);
-                    victim.setNoDamageTicks(0);
-                    victim.setVelocity(victim.getVelocity().add(
-                        victim.getLocation().toVector().subtract(source.getLocation().toVector()).normalize().multiply(knockbackStrength)
-                    ));
-                    victim.getWorld().spawnParticle(Particle.DAMAGE_INDICATOR, victim.getLocation().add(0, 1, 0), 8, 0.3, 0.3, 0.3, 0.1);
-                    effects.playImpact(victim.getLocation(), getType());
+        int[] remaining = {ticks};
+        BukkitTask[] taskHolder = new BukkitTask[1];
+        taskHolder[0] = plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
+            if (!victim.isOnline() || victim.isDead()) {
+                if (taskHolder[0] != null) {
+                    taskHolder[0].cancel();
                 }
-            }, delay);
-        }
+                return;
+            }
+            if (remaining[0] <= 0) {
+                taskHolder[0].cancel();
+                return;
+            }
+            remaining[0]--;
+            victim.damage(perTick, source);
+            victim.setNoDamageTicks(0);
+            victim.getWorld().spawnParticle(Particle.DAMAGE_INDICATOR, victim.getLocation().add(0, 1, 0), 8, 0.3, 0.3, 0.3, 0.1);
+            effects.playImpact(victim.getLocation(), getType());
+        }, 0L, intervalTicks);
     }
 }

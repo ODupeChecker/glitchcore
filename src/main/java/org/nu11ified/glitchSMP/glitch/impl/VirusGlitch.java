@@ -14,6 +14,7 @@ import org.nu11ified.glitchSMP.config.GlitchSettings;
 import org.nu11ified.glitchSMP.effects.GlitchEffects;
 import org.nu11ified.glitchSMP.glitch.Glitch;
 import org.nu11ified.glitchSMP.glitch.GlitchType;
+import org.nu11ified.glitchSMP.util.WorldGuardHook;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -55,6 +56,9 @@ public class VirusGlitch extends Glitch implements Listener {
     @EventHandler
     public void onEntityDamage(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof Player attacker) || !(event.getEntity() instanceof Player target)) {
+            return;
+        }
+        if (WorldGuardHook.isBlockedTarget(attacker, target, plugin.getGlitchSettings().getDisabledRegion())) {
             return;
         }
         if (!primedPlayers.remove(attacker.getUniqueId())) {

@@ -16,6 +16,7 @@ import org.nu11ified.glitchSMP.config.GlitchSettings;
 import org.nu11ified.glitchSMP.effects.GlitchEffects;
 import org.nu11ified.glitchSMP.glitch.Glitch;
 import org.nu11ified.glitchSMP.glitch.GlitchType;
+import org.nu11ified.glitchSMP.util.WorldGuardHook;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,6 +52,9 @@ public class InventoryGlitch extends Glitch implements Listener {
         Player target = getTargetPlayer(player);
         if (target == null) {
             player.sendMessage("§cNo target found for Inventory Glitch.");
+            return;
+        }
+        if (WorldGuardHook.isBlockedTarget(player, target, plugin.getGlitchSettings().getDisabledRegion())) {
             return;
         }
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
