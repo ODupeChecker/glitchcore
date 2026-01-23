@@ -4,6 +4,7 @@ import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -21,8 +22,6 @@ import org.nu11ified.glitchSMP.config.GlitchSettings;
 import org.nu11ified.glitchSMP.effects.GlitchEffects;
 import org.nu11ified.glitchSMP.glitch.Glitch;
 import org.nu11ified.glitchSMP.glitch.GlitchType;
-import org.nu11ified.glitchSMP.util.DamageTickHelper;
-
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -41,7 +40,6 @@ public class FreezeGlitch extends Glitch implements Listener {
     };
     private final GlitchSMP plugin;
     private final GlitchEffects effects;
-    private final DamageTickHelper damageTickHelper;
     private final GlitchSettings.GlitchProfile profile;
     private final Set<UUID> primedPlayers = new HashSet<>();
 
@@ -55,7 +53,6 @@ public class FreezeGlitch extends Glitch implements Listener {
         );
         this.plugin = plugin;
         this.effects = plugin.getGlitchEffects();
-        this.damageTickHelper = plugin.getDamageTickHelper();
         this.profile = profile;
     }
 
@@ -93,8 +90,14 @@ public class FreezeGlitch extends Glitch implements Listener {
         victim.getWorld().spawnParticle(Particle.SNOWFLAKE, victim.getLocation().add(0, 1, 0), 20, 0.4, 0.6, 0.4, 0.05);
         victim.getWorld().playSound(victim.getLocation(), Sound.BLOCK_GLASS_BREAK, 0.7f, 1.1f);
         if (profile.baseDamage() > 0) {
-            damageTickHelper.applyDamageTicks(source, victim, getType(), profile.baseDamage(), profile.damageTicks(), plugin.getGlitchSettings().getCombatDefaults().intervalTicks(),
-                plugin.getGlitchSettings().getCombatDefaults().knockbackStrength() * profile.knockbackMultiplier());
+            applyFreezeDamageTicks(
+                source,
+                victim,
+                profile.baseDamage(),
+                profile.damageTicks(),
+                plugin.getGlitchSettings().getCombatDefaults().intervalTicks(),
+                plugin.getGlitchSettings().getCombatDefaults().knockbackStrength() * profile.knockbackMultiplier()
+            );
         }
     }
 
@@ -135,6 +138,27 @@ public class FreezeGlitch extends Glitch implements Listener {
                 0,
                 ICE_DUST
             );
+        }
+    }
+
+    private void applyFreezeDamageTicks(Player source, Player victim, double totalDamage, int ticks, int intervalTicks, double knockbackStrength) {
+        if (ticks <= 0) {
+            return;
+        }
+        double perTick = totalDamage / ticks;
+        for (int i = 0; i < ticks; i++) {
+            int delay = i * intervalTicks;
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                if (!victim.isDead()) {
+                    victim.damage(perTick, source);
+                    victim.setNoDamageTicks(0);
+                    victim.setVelocity(victim.getVelocity().add(
+                        victim.getLocation().toVector().subtract(source.getLocation().toVector()).normalize().multiply(knockbackStrength)
+                    ));
+                    victim.getWorld().spawnParticle(Particle.DAMAGE_INDICATOR, victim.getLocation().add(0, 1, 0), 8, 0.3, 0.3, 0.3, 0.1);
+                    effects.playImpact(victim.getLocation(), getType());
+                }
+            }, delay);
         }
     }
 }
