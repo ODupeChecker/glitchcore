@@ -18,10 +18,10 @@ public final class WorldGuardHook {
         if (target == null) {
             return false;
         }
-        if (!isInRegion(target, regionId)) {
-            return false;
+        if (isInRegion(target, regionId)) {
+            return true;
         }
-        return source == null || !isInRegion(source, regionId);
+        return source != null && isInRegion(source, regionId);
     }
 
     public static boolean isInRegion(Player player, String regionId) {
