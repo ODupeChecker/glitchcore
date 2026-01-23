@@ -4,14 +4,16 @@ import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
+import org.bukkit.block.Block;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
+import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.Location;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Transformation;
 import org.joml.AxisAngle4f;
@@ -24,8 +26,10 @@ import org.nu11ified.glitchSMP.glitch.GlitchType;
 import org.nu11ified.glitchSMP.util.DamageTickHelper;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class FreezeGlitch extends Glitch implements Listener {
     private static final Particle.DustOptions ICE_DUST = new Particle.DustOptions(Color.fromRGB(90, 170, 255), 1.0f);
@@ -44,6 +48,7 @@ public class FreezeGlitch extends Glitch implements Listener {
     private final DamageTickHelper damageTickHelper;
     private final GlitchSettings.GlitchProfile profile;
     private final Set<UUID> primedPlayers = new HashSet<>();
+    private final Map<UUID, FrozenState> frozenPlayers = new ConcurrentHashMap<>();
 
     public FreezeGlitch(GlitchSMP plugin, GlitchSettings.GlitchProfile profile) {
         super(
@@ -70,7 +75,7 @@ public class FreezeGlitch extends Glitch implements Listener {
     protected void onDeactivate(Player player) {
         primedPlayers.remove(player.getUniqueId());
         effects.playEnd(player, getType());
-        if (primedPlayers.isEmpty()) {
+        if (primedPlayers.isEmpty() && frozenPlayers.isEmpty()) {
             HandlerList.unregisterAll(this);
         }
     }
@@ -86,9 +91,30 @@ public class FreezeGlitch extends Glitch implements Listener {
         applyFreeze(player, victim);
     }
 
+    @EventHandler
+    public void onPlayerMove(PlayerMoveEvent event) {
+        Player player = event.getPlayer();
+        FrozenState state = frozenPlayers.get(player.getUniqueId());
+        if (state == null || event.getTo() == null) {
+            return;
+        }
+        if (event.getFrom().getX() != event.getTo().getX()
+            || event.getFrom().getY() != event.getTo().getY()
+            || event.getFrom().getZ() != event.getTo().getZ()) {
+            Location locked = state.location().clone();
+            locked.setYaw(event.getTo().getYaw());
+            locked.setPitch(event.getTo().getPitch());
+            event.setTo(locked);
+        }
+    }
+
     private void applyFreeze(Player source, Player victim) {
         int durationTicks = (int) (getDurationMillis() / 50L);
-        victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, durationTicks, 255, false, true, true));
+        Location freezeLocation = victim.getLocation().clone();
+        Block block = freezeLocation.getBlock();
+        BlockData originalBlock = block.getBlockData();
+        block.setType(Material.ICE, false);
+        frozenPlayers.put(victim.getUniqueId(), new FrozenState(freezeLocation, block, originalBlock));
         spawnIcePrison(victim, durationTicks);
         victim.getWorld().spawnParticle(Particle.SNOWFLAKE, victim.getLocation().add(0, 1, 0), 20, 0.4, 0.6, 0.4, 0.05);
         victim.getWorld().playSound(victim.getLocation(), Sound.BLOCK_GLASS_BREAK, 0.7f, 1.1f);
@@ -120,6 +146,13 @@ public class FreezeGlitch extends Glitch implements Listener {
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             display.remove();
             particleTask.cancel();
+            FrozenState state = frozenPlayers.remove(victim.getUniqueId());
+            if (state != null) {
+                state.block().setBlockData(state.originalBlock(), false);
+            }
+            if (primedPlayers.isEmpty() && frozenPlayers.isEmpty()) {
+                HandlerList.unregisterAll(this);
+            }
         }, durationTicks);
     }
 
@@ -136,5 +169,8 @@ public class FreezeGlitch extends Glitch implements Listener {
                 ICE_DUST
             );
         }
+    }
+
+    private record FrozenState(Location location, Block block, BlockData originalBlock) {
     }
 }
