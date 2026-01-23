@@ -184,16 +184,24 @@ public class FreezeGlitch extends Glitch implements Listener {
             return;
         }
         double perTick = totalDamage / ticks;
-        for (int i = 0; i < ticks; i++) {
-            int delay = i * intervalTicks;
-            Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                if (!victim.isDead()) {
-                    victim.damage(perTick, source);
-                    victim.setNoDamageTicks(0);
-                    victim.getWorld().spawnParticle(Particle.DAMAGE_INDICATOR, victim.getLocation().add(0, 1, 0), 8, 0.3, 0.3, 0.3, 0.1);
-                    effects.playImpact(victim.getLocation(), getType());
+        int[] remaining = {ticks};
+        BukkitTask[] taskHolder = new BukkitTask[1];
+        taskHolder[0] = plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
+            if (!victim.isOnline() || victim.isDead()) {
+                if (taskHolder[0] != null) {
+                    taskHolder[0].cancel();
                 }
-            }, delay);
-        }
+                return;
+            }
+            if (remaining[0] <= 0) {
+                taskHolder[0].cancel();
+                return;
+            }
+            remaining[0]--;
+            victim.damage(perTick, source);
+            victim.setNoDamageTicks(0);
+            victim.getWorld().spawnParticle(Particle.DAMAGE_INDICATOR, victim.getLocation().add(0, 1, 0), 8, 0.3, 0.3, 0.3, 0.1);
+            effects.playImpact(victim.getLocation(), getType());
+        }, 0L, intervalTicks);
     }
 }
