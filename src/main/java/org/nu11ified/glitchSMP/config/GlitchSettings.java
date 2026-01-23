@@ -15,20 +15,15 @@ public class GlitchSettings {
     private static final String CONFIG_FILE = "glitches.yml";
 
     private final GlitchSMP plugin;
-    private final FileConfiguration config;
+    private FileConfiguration config;
     private final Map<GlitchType, GlitchProfile> profiles = new EnumMap<>(GlitchType.class);
-    private final AudioDefaults audioDefaults;
-    private final VisualDefaults visualDefaults;
-    private final CombatDefaults combatDefaults;
+    private AudioDefaults audioDefaults;
+    private VisualDefaults visualDefaults;
+    private CombatDefaults combatDefaults;
 
     public GlitchSettings(GlitchSMP plugin) {
         this.plugin = plugin;
-        ensureConfig();
-        this.config = YamlConfiguration.loadConfiguration(new File(plugin.getDataFolder(), CONFIG_FILE));
-        this.audioDefaults = loadAudioDefaults();
-        this.visualDefaults = loadVisualDefaults();
-        this.combatDefaults = loadCombatDefaults();
-        loadProfiles();
+        reload();
     }
 
     private void ensureConfig() {
@@ -53,6 +48,16 @@ public class GlitchSettings {
             double knockbackMultiplier = entry != null ? entry.getDouble("knockbackMultiplier", 1.0) : 1.0;
             profiles.put(type, new GlitchProfile(cooldownMillis, durationMillis, baseDamage, damageTicks, knockbackMultiplier));
         }
+    }
+
+    public void reload() {
+        ensureConfig();
+        this.config = YamlConfiguration.loadConfiguration(new File(plugin.getDataFolder(), CONFIG_FILE));
+        this.audioDefaults = loadAudioDefaults();
+        this.visualDefaults = loadVisualDefaults();
+        this.combatDefaults = loadCombatDefaults();
+        profiles.clear();
+        loadProfiles();
     }
 
     private long toMillis(ConfigurationSection section, String key, long fallbackMillis) {

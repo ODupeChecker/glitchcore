@@ -3,6 +3,7 @@ package org.nu11ified.glitchSMP.glitch.impl;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.Location;
+import org.bukkit.FluidCollisionMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
@@ -11,6 +12,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 import org.nu11ified.glitchSMP.GlitchSMP;
 import org.nu11ified.glitchSMP.config.GlitchSettings;
@@ -93,12 +95,15 @@ public class TelekinesisGlitch extends Glitch implements Listener {
                 return;
             }
             Location casterLocation = caster.getLocation();
-            Vector direction = caster.getEyeLocation().getDirection().normalize();
-            Location desired = casterLocation.add(direction.multiply(1.0));
-            desired.setY(casterLocation.getY() + 0.5);
+            Location eyeLocation = caster.getEyeLocation();
+            Vector direction = eyeLocation.getDirection().normalize();
+            Location desired = getSafeControlLocation(casterLocation, eyeLocation, direction);
             Location targetLocation = target.getLocation();
             desired.setYaw(targetLocation.getYaw());
             desired.setPitch(targetLocation.getPitch());
+            if (!desired.getBlock().isPassable()) {
+                return;
+            }
             target.teleport(desired);
             target.setInvulnerable(false);
             target.setVelocity(new Vector(0, 0, 0));
@@ -117,5 +122,26 @@ public class TelekinesisGlitch extends Glitch implements Listener {
         if (target != null) {
             target.setGravity(true);
         }
+    }
+
+    private Location getSafeControlLocation(Location casterLocation, Location eyeLocation, Vector direction) {
+        double distance = 1.0;
+        RayTraceResult hit = casterLocation.getWorld().rayTraceBlocks(
+            eyeLocation,
+            direction,
+            distance,
+            FluidCollisionMode.NEVER,
+            true
+        );
+        Vector offset = direction.clone().multiply(distance);
+        Location desired;
+        if (hit != null && hit.getHitPosition() != null) {
+            Vector safePosition = hit.getHitPosition().subtract(direction.clone().multiply(0.2));
+            desired = safePosition.toLocation(casterLocation.getWorld());
+        } else {
+            desired = casterLocation.clone().add(offset);
+        }
+        desired.setY(casterLocation.getY() + 0.5);
+        return desired;
     }
 }
