@@ -49,7 +49,7 @@ public enum GlitchType {
     ),
     VIRUS(
         "Virus Glitch",
-        "Prime the next hit to blind the target.",
+        "Prime your next hit to blind the target with a screen overlay.",
         minutesToMillis(2),
         secondsToMillis(10),
         6,
