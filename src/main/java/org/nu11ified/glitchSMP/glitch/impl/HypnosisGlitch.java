@@ -32,7 +32,7 @@ import java.util.UUID;
 public class HypnosisGlitch extends Glitch implements Listener {
     private static final String HYPNOSIS_TITLE = "§4Hypnosis Trap";
     private static final int INVENTORY_SIZE = 27;
-    private static final int ESCAPE_CLICKS_REQUIRED = 3;
+    private static final int ESCAPE_CLICKS_REQUIRED = 1;
     private static final ItemStack RED_GLASS = createPane(Material.RED_STAINED_GLASS_PANE, "§cEscape?");
     private static final ItemStack GREEN_GLASS = createPane(Material.LIME_STAINED_GLASS_PANE, "§aClick me!");
     private static final Random RANDOM = new Random();
