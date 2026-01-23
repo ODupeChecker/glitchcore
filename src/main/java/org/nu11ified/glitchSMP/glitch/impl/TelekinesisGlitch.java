@@ -74,6 +74,8 @@ public class TelekinesisGlitch extends Glitch implements Listener {
         int durationTicks = (int) (getDurationMillis() / 50L);
         stopTelekinesisControl(target.getUniqueId());
         target.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION, durationTicks, 0, false, true, true));
+        target.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, durationTicks, 0, false, true, true));
+        target.setInvulnerable(false);
         target.setGravity(false);
         target.setVelocity(new Vector(0, 0, 0));
         target.setFallDistance(0f);
@@ -94,7 +96,11 @@ public class TelekinesisGlitch extends Glitch implements Listener {
             Vector direction = caster.getEyeLocation().getDirection().normalize();
             Location desired = casterLocation.add(direction.multiply(1.0));
             desired.setY(casterLocation.getY() + 0.5);
+            Location targetLocation = target.getLocation();
+            desired.setYaw(targetLocation.getYaw());
+            desired.setPitch(targetLocation.getPitch());
             target.teleport(desired);
+            target.setInvulnerable(false);
             target.setVelocity(new Vector(0, 0, 0));
             target.setFallDistance(0f);
         }, 0L, 1L);
