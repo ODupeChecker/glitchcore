@@ -60,6 +60,10 @@ public class HypnosisGlitch extends Glitch implements Listener {
             player.sendMessage("§cNo target found for Hypnosis Glitch.");
             return;
         }
+        if (plugin.getAbilityBlocker().isAbilityBlocked(player) || plugin.getAbilityBlocker().isAbilityBlocked(target)) {
+            player.sendMessage("§cThat player cannot be hypnotized here.");
+            return;
+        }
         if (ACTIVE_TARGETS.contains(target.getUniqueId())) {
             player.sendMessage("§cThat player is already hypnotized.");
             return;

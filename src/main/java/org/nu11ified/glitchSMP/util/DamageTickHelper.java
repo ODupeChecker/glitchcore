@@ -12,14 +12,19 @@ import org.nu11ified.glitchSMP.glitch.GlitchType;
 public class DamageTickHelper {
     private final Plugin plugin;
     private final GlitchEffects effects;
+    private final AbilityBlocker abilityBlocker;
 
-    public DamageTickHelper(Plugin plugin, GlitchEffects effects) {
+    public DamageTickHelper(Plugin plugin, GlitchEffects effects, AbilityBlocker abilityBlocker) {
         this.plugin = plugin;
         this.effects = effects;
+        this.abilityBlocker = abilityBlocker;
     }
 
     public void applyDamageTicks(Player source, LivingEntity target, GlitchType type, double totalDamage, int ticks, int intervalTicks, double knockbackStrength) {
         if (ticks <= 0) {
+            return;
+        }
+        if (target instanceof Player playerTarget && abilityBlocker.isAbilityBlocked(playerTarget)) {
             return;
         }
         double perTick = totalDamage / ticks;
@@ -27,6 +32,9 @@ public class DamageTickHelper {
         for (int i = 0; i < ticks; i++) {
             int delay = i * intervalTicks;
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                if (target instanceof Player playerTarget && abilityBlocker.isAbilityBlocked(playerTarget)) {
+                    return;
+                }
                 if (!target.isDead()) {
                     target.damage(perTick, source);
                     target.setVelocity(target.getVelocity().add(knockback));

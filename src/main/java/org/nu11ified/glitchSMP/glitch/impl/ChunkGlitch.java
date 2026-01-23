@@ -73,6 +73,9 @@ public class ChunkGlitch extends Glitch implements Listener {
         if (event.getTo() == null) {
             return;
         }
+        if (plugin.getAbilityBlocker().isAbilityBlocked(player)) {
+            return;
+        }
         for (Map.Entry<UUID, Chunk> entry : activeChunks.entrySet()) {
             Chunk chunk = entry.getValue();
             if (player.getUniqueId().equals(entry.getKey())) {

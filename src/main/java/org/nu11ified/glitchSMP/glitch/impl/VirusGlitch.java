@@ -60,6 +60,9 @@ public class VirusGlitch extends Glitch implements Listener {
         if (!primedPlayers.remove(attacker.getUniqueId())) {
             return;
         }
+        if (plugin.getAbilityBlocker().isAbilityBlocked(attacker) || plugin.getAbilityBlocker().isAbilityBlocked(target)) {
+            return;
+        }
         applyVirus(attacker, target);
         target.getWorld().playSound(target.getLocation(), Sound.ENTITY_HUSK_AMBIENT, 0.6f, 0.8f);
         target.getWorld().spawnParticle(Particle.ENTITY_EFFECT, target.getLocation().add(0, 1, 0), 14, 0.4, 0.4, 0.4, 0.1);

@@ -80,6 +80,9 @@ public class FreezeGlitch extends Glitch implements Listener {
         if (!primedPlayers.remove(player.getUniqueId())) {
             return;
         }
+        if (plugin.getAbilityBlocker().isAbilityBlocked(player) || plugin.getAbilityBlocker().isAbilityBlocked(victim)) {
+            return;
+        }
         applyFreeze(player, victim);
     }
 
@@ -149,6 +152,9 @@ public class FreezeGlitch extends Glitch implements Listener {
         for (int i = 0; i < ticks; i++) {
             int delay = i * intervalTicks;
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                if (plugin.getAbilityBlocker().isAbilityBlocked(victim)) {
+                    return;
+                }
                 if (!victim.isDead()) {
                     victim.damage(perTick, source);
                     victim.setNoDamageTicks(0);

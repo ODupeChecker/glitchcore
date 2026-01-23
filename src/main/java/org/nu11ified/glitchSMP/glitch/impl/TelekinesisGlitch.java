@@ -61,6 +61,9 @@ public class TelekinesisGlitch extends Glitch implements Listener {
         if (!primedPlayers.remove(player.getUniqueId())) {
             return;
         }
+        if (plugin.getAbilityBlocker().isAbilityBlocked(player) || plugin.getAbilityBlocker().isAbilityBlocked(target)) {
+            return;
+        }
         target.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION, 40, 1, false, true, true));
         target.getWorld().spawnParticle(Particle.INSTANT_EFFECT, target.getLocation().add(0, 1, 0), 12, 0.3, 0.3, 0.3, 0.05);
         target.getWorld().playSound(target.getLocation(), Sound.ENTITY_SHULKER_SHOOT, 0.8f, 1.2f);

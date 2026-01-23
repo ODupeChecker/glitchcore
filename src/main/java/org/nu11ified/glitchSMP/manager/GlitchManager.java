@@ -90,6 +90,10 @@ public class GlitchManager {
      */
     public boolean activateGlitch(Player player, Glitch glitch) {
         UUID playerUUID = player.getUniqueId();
+
+        if (plugin.getAbilityBlocker().isAbilityBlocked(player)) {
+            return false;
+        }
         
         // Check if player has the glitch equipped
         if (!isGlitchEquipped(player, glitch)) {

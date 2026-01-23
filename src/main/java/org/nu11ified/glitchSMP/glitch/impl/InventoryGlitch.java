@@ -53,6 +53,10 @@ public class InventoryGlitch extends Glitch implements Listener {
             player.sendMessage("§cNo target found for Inventory Glitch.");
             return;
         }
+        if (plugin.getAbilityBlocker().isAbilityBlocked(player) || plugin.getAbilityBlocker().isAbilityBlocked(target)) {
+            player.sendMessage("§cThat player cannot be affected here.");
+            return;
+        }
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         UUID targetId = target.getUniqueId();
         activeTargets.put(player.getUniqueId(), targetId);

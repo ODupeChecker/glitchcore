@@ -54,9 +54,15 @@ public class GravityGlitch extends Glitch {
         if (!owner.isOnline()) {
             return;
         }
+        if (plugin.getAbilityBlocker().isAbilityBlocked(owner)) {
+            return;
+        }
         owner.getWorld().spawnParticle(Particle.INSTANT_EFFECT, owner.getLocation().add(0, 0.5, 0), 12, 1.2, 0.2, 1.2, 0.05);
         for (Player nearby : owner.getWorld().getPlayers()) {
             if (nearby.getLocation().distance(owner.getLocation()) <= 6) {
+                if (plugin.getAbilityBlocker().isAbilityBlocked(nearby)) {
+                    continue;
+                }
                 nearby.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 40, 2, false, true, true));
                 nearby.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 40, 0, false, true, true));
             }
