@@ -10,23 +10,18 @@ import java.util.Collection;
 
 public final class WorldGuardHook {
     private static final String WORLDGUARD_PLUGIN = "WorldGuard";
-    private static final String SPAWN_REGION = "spawn";
 
     private WorldGuardHook() {
     }
 
-    public static boolean isInSpawnRegion(Player player) {
-        return isInRegion(player, SPAWN_REGION);
-    }
-
-    public static boolean isBlockedTarget(Player source, Player target) {
+    public static boolean isBlockedTarget(Player source, Player target, String regionId) {
         if (target == null) {
             return false;
         }
-        if (!isInSpawnRegion(target)) {
+        if (!isInRegion(target, regionId)) {
             return false;
         }
-        return source == null || !isInSpawnRegion(source);
+        return source == null || !isInRegion(source, regionId);
     }
 
     public static boolean isInRegion(Player player, String regionId) {

@@ -5,6 +5,8 @@ global:
     damageTicks: 3
     intervalTicks: 5
     knockbackStrength: 0.4
+  protection:
+    disabledRegion: "spawn"
   audio:
     activation:
       volume: 1.0

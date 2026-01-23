@@ -20,6 +20,7 @@ public class GlitchSettings {
     private AudioDefaults audioDefaults;
     private VisualDefaults visualDefaults;
     private CombatDefaults combatDefaults;
+    private String disabledRegion;
 
     public GlitchSettings(GlitchSMP plugin) {
         this.plugin = plugin;
@@ -56,6 +57,7 @@ public class GlitchSettings {
         this.audioDefaults = loadAudioDefaults();
         this.visualDefaults = loadVisualDefaults();
         this.combatDefaults = loadCombatDefaults();
+        this.disabledRegion = config.getString("global.protection.disabledRegion", "spawn");
         profiles.clear();
         loadProfiles();
     }
@@ -129,6 +131,10 @@ public class GlitchSettings {
 
     public CombatDefaults getCombatDefaults() {
         return combatDefaults;
+    }
+
+    public String getDisabledRegion() {
+        return disabledRegion;
     }
 
     public FileConfiguration getRawConfig() {

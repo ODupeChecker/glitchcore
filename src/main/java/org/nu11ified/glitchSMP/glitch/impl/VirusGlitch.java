@@ -58,7 +58,7 @@ public class VirusGlitch extends Glitch implements Listener {
         if (!(event.getDamager() instanceof Player attacker) || !(event.getEntity() instanceof Player target)) {
             return;
         }
-        if (WorldGuardHook.isBlockedTarget(attacker, target)) {
+        if (WorldGuardHook.isBlockedTarget(attacker, target, plugin.getGlitchSettings().getDisabledRegion())) {
             return;
         }
         if (!primedPlayers.remove(attacker.getUniqueId())) {

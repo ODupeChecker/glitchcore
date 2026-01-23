@@ -77,7 +77,7 @@ public class RedstoneGlitch extends Glitch implements Listener {
         if (!activePlayers.contains(player.getUniqueId())) {
             return;
         }
-        if (event.getEntity() instanceof Player target && WorldGuardHook.isBlockedTarget(player, target)) {
+        if (event.getEntity() instanceof Player target && WorldGuardHook.isBlockedTarget(player, target, plugin.getGlitchSettings().getDisabledRegion())) {
             return;
         }
         if (poweredState.getOrDefault(player.getUniqueId(), false)) {

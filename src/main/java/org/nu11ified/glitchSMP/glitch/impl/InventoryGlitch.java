@@ -54,7 +54,7 @@ public class InventoryGlitch extends Glitch implements Listener {
             player.sendMessage("§cNo target found for Inventory Glitch.");
             return;
         }
-        if (WorldGuardHook.isBlockedTarget(player, target)) {
+        if (WorldGuardHook.isBlockedTarget(player, target, plugin.getGlitchSettings().getDisabledRegion())) {
             return;
         }
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
