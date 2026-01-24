@@ -4,10 +4,15 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.nu11ified.glitchSMP.GlitchSMP;
 import org.nu11ified.glitchSMP.glitch.Glitch;
 import org.nu11ified.glitchSMP.glitch.GlitchType;
@@ -144,6 +149,53 @@ public class ActivationManager implements Listener {
             }
         }
     }
+
+    /**
+     * Prevents glitch items from being placed into the offhand slot.
+     *
+     * @param event The inventory click event
+     */
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player)) {
+            return;
+        }
+        if (!(event.getClickedInventory() instanceof PlayerInventory)) {
+            return;
+        }
+        if (event.getSlot() != 40) {
+            return;
+        }
+        ItemStack cursor = event.getCursor();
+        ItemStack hotbarItem = null;
+        if (event.getClick() == ClickType.NUMBER_KEY && event.getHotbarButton() >= 0) {
+            hotbarItem = player.getInventory().getItem(event.getHotbarButton());
+        }
+        if (isGlitchItem(cursor) || isGlitchItem(hotbarItem)) {
+            event.setCancelled(true);
+            player.sendMessage(ChatColor.RED + "Glitches cannot be placed in the offhand slot.");
+        }
+    }
+
+    /**
+     * Prevents dragging glitch items into the offhand slot.
+     *
+     * @param event The inventory drag event
+     */
+    @EventHandler
+    public void onInventoryDrag(InventoryDragEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player)) {
+            return;
+        }
+        if (!isGlitchItem(event.getOldCursor())) {
+            return;
+        }
+        int offhandRawSlot = event.getView().getTopInventory().getSize() + 40;
+        if (event.getRawSlots().contains(offhandRawSlot)) {
+            event.setCancelled(true);
+            player.sendMessage(ChatColor.RED + "Glitches cannot be placed in the offhand slot.");
+        }
+    }
     
     /**
      * Handles player sneaking events to track crouch state
@@ -190,5 +242,16 @@ public class ActivationManager implements Listener {
         UUID playerUUID = player.getUniqueId();
         currentGlitchSlot.remove(playerUUID);
         playerSneaking.remove(playerUUID);
+    }
+
+    private boolean isGlitchItem(ItemStack item) {
+        if (item == null) {
+            return false;
+        }
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) {
+            return false;
+        }
+        return glitchItemFactory.isGlitchItem(item);
     }
 }

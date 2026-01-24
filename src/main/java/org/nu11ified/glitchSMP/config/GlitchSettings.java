@@ -21,6 +21,8 @@ public class GlitchSettings {
     private VisualDefaults visualDefaults;
     private CombatDefaults combatDefaults;
     private String disabledRegion;
+    private int hypnosisEscapeClicks;
+    private long telekinesisControlDurationMillis;
 
     public GlitchSettings(GlitchSMP plugin) {
         this.plugin = plugin;
@@ -60,6 +62,8 @@ public class GlitchSettings {
         this.disabledRegion = config.getString("global.protection.disabledRegion", "spawn");
         profiles.clear();
         loadProfiles();
+        this.hypnosisEscapeClicks = readEscapeClicks();
+        this.telekinesisControlDurationMillis = readTelekinesisControlDurationMillis();
     }
 
     private long toMillis(ConfigurationSection section, String key, long fallbackMillis) {
@@ -137,6 +141,14 @@ public class GlitchSettings {
         return disabledRegion;
     }
 
+    public int getHypnosisEscapeClicks() {
+        return hypnosisEscapeClicks;
+    }
+
+    public long getTelekinesisControlDurationMillis() {
+        return telekinesisControlDurationMillis;
+    }
+
     public FileConfiguration getRawConfig() {
         return config;
     }
@@ -151,5 +163,25 @@ public class GlitchSettings {
     }
 
     public record CombatDefaults(int damageTicks, int intervalTicks, double knockbackStrength) {
+    }
+
+    private int readEscapeClicks() {
+        int escapeClicks = config.getInt("perGlitch.HYPNOSIS.escapeClicks", 1);
+        return Math.max(1, escapeClicks);
+    }
+
+    private long readTelekinesisControlDurationMillis() {
+        ConfigurationSection entry = config.getConfigurationSection("perGlitch.TELEKINESIS");
+        long fallback = profiles.getOrDefault(GlitchType.TELEKINESIS, new GlitchProfile(
+            GlitchType.TELEKINESIS.getCooldownMillis(),
+            GlitchType.TELEKINESIS.getDurationMillis(),
+            0.0,
+            combatDefaults.damageTicks(),
+            1.0
+        )).durationMillis();
+        if (entry == null || !entry.contains("controlDurationSeconds")) {
+            return fallback;
+        }
+        return entry.getLong("controlDurationSeconds") * 1000L;
     }
 }

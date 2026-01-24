@@ -77,7 +77,8 @@ public class TelekinesisGlitch extends Glitch implements Listener {
     }
 
     private void startTelekinesisControl(Player caster, Player target) {
-        int durationTicks = (int) (getDurationMillis() / 50L);
+        long controlDurationMillis = plugin.getGlitchSettings().getTelekinesisControlDurationMillis();
+        int durationTicks = (int) (controlDurationMillis / 50L);
         stopTelekinesisControl(target.getUniqueId());
         target.addPotionEffect(new PotionEffect(PotionEffectType.LEVITATION, durationTicks, 0, false, true, true));
         target.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, durationTicks, 0, false, true, true));

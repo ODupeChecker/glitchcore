@@ -112,6 +112,7 @@ perGlitch:
   HYPNOSIS:
     durationSeconds: 6
     cooldownSeconds: 120
+    escapeClicks: 1
   GRAVITY:
     durationSeconds: 15
     cooldownSeconds: 60
@@ -122,6 +123,7 @@ perGlitch:
     durationSeconds: 15
     cooldownSeconds: 180
     baseDamage: 1.0
+    controlDurationSeconds: 15
   RAYCAST:
     durationSeconds: 0
     cooldownSeconds: 120
