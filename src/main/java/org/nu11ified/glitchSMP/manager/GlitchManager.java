@@ -1,8 +1,12 @@
 package org.nu11ified.glitchSMP.manager;
 
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 import org.nu11ified.glitchSMP.GlitchSMP;
 import org.nu11ified.glitchSMP.glitch.Glitch;
+import org.nu11ified.glitchSMP.glitch.GlitchType;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,6 +31,7 @@ public class GlitchManager {
     
     // Map of active glitches and their scheduled deactivation tasks
     private final Map<UUID, Map<UUID, Integer>> activeGlitchTasks = new ConcurrentHashMap<>();
+    private final NamespacedKey[] equippedSlotKeys;
     
     /**
      * Constructor for GlitchManager
@@ -35,6 +40,10 @@ public class GlitchManager {
      */
     public GlitchManager(GlitchSMP plugin) {
         this.plugin = plugin;
+        this.equippedSlotKeys = new NamespacedKey[] {
+            new NamespacedKey(plugin, "glitch_slot_0"),
+            new NamespacedKey(plugin, "glitch_slot_1")
+        };
     }
     
     /**
@@ -51,6 +60,7 @@ public class GlitchManager {
         for (int i = 0; i < MAX_EQUIPPED_GLITCHES; i++) {
             if (slots[i] == null) {
                 slots[i] = glitch;
+                persistGlitchSlot(player, i, glitch);
                 return OptionalInt.of(i);
             }
         }
@@ -78,6 +88,7 @@ public class GlitchManager {
         }
         
         slots[slot] = null;
+        persistGlitchSlot(player, slot, null);
         return removed;
     }
     
@@ -230,6 +241,31 @@ public class GlitchManager {
         }
         return slots.clone();
     }
+
+    /**
+     * Loads equipped glitches for a player from persistent data storage.
+     *
+     * @param player The player to load glitches for
+     */
+    public void loadPlayerData(Player player) {
+        Glitch[] slots = new Glitch[MAX_EQUIPPED_GLITCHES];
+        PersistentDataContainer container = player.getPersistentDataContainer();
+
+        for (int i = 0; i < MAX_EQUIPPED_GLITCHES; i++) {
+            String glitchName = container.get(equippedSlotKeys[i], PersistentDataType.STRING);
+            if (glitchName == null || glitchName.isEmpty()) {
+                continue;
+            }
+            try {
+                GlitchType glitchType = GlitchType.valueOf(glitchName);
+                slots[i] = plugin.getGlitchFactory().createGlitch(glitchType);
+            } catch (IllegalArgumentException ignored) {
+                container.remove(equippedSlotKeys[i]);
+            }
+        }
+
+        equippedGlitches.put(player.getUniqueId(), slots);
+    }
     
     /**
      * Cleans up all glitch data for a player (used when they leave the server)
@@ -253,6 +289,18 @@ public class GlitchManager {
         activeGlitchTasks.remove(playerUUID);
         
         // We don't remove equipped glitches here as they should persist
-        // between sessions. This would be handled by a data storage system.
+        // between sessions via persistent data storage.
+    }
+
+    private void persistGlitchSlot(Player player, int slot, Glitch glitch) {
+        if (slot < 0 || slot >= MAX_EQUIPPED_GLITCHES) {
+            return;
+        }
+        PersistentDataContainer container = player.getPersistentDataContainer();
+        if (glitch == null) {
+            container.remove(equippedSlotKeys[slot]);
+        } else {
+            container.set(equippedSlotKeys[slot], PersistentDataType.STRING, glitch.getType().name());
+        }
     }
 }
