@@ -7,6 +7,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.inventory.ItemStack;
@@ -82,23 +83,7 @@ public class InventoryGlitch extends Glitch implements Listener {
         if (targetId == null) {
             return;
         }
-        Player target = Bukkit.getPlayer(targetId);
-        InventorySnapshot snapshot = snapshots.remove(targetId);
-        if (snapshot != null && target != null && target.isOnline()) {
-            snapshot.restore(target);
-        }
-        lockedPlayers.remove(targetId);
-        BukkitTask task = tickTasks.remove(targetId);
-        if (task != null) {
-            task.cancel();
-        }
-        if (target != null) {
-            effects.playEnd(target, getType());
-            target.getWorld().playSound(target.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1.0f, 0.8f);
-        }
-        if (lockedPlayers.isEmpty()) {
-            HandlerList.unregisterAll(this);
-        }
+        clearTarget(targetId, true);
     }
 
     @EventHandler
@@ -113,6 +98,16 @@ public class InventoryGlitch extends Glitch implements Listener {
         if (lockedPlayers.contains(event.getPlayer().getUniqueId())) {
             event.setCancelled(true);
         }
+    }
+
+    @EventHandler
+    public void onPlayerDeath(PlayerDeathEvent event) {
+        UUID targetId = event.getEntity().getUniqueId();
+        if (!lockedPlayers.contains(targetId)) {
+            return;
+        }
+        removeActiveTargetEntries(targetId);
+        clearTarget(targetId, false);
     }
 
     private Player getTargetPlayer(Player player) {
@@ -139,5 +134,29 @@ public class InventoryGlitch extends Glitch implements Listener {
             player.getInventory().setItemInOffHand(offhand);
             player.updateInventory();
         }
+    }
+
+    private void clearTarget(UUID targetId, boolean restoreSnapshot) {
+        Player target = Bukkit.getPlayer(targetId);
+        InventorySnapshot snapshot = snapshots.remove(targetId);
+        if (restoreSnapshot && snapshot != null && target != null && target.isOnline()) {
+            snapshot.restore(target);
+        }
+        lockedPlayers.remove(targetId);
+        BukkitTask task = tickTasks.remove(targetId);
+        if (task != null) {
+            task.cancel();
+        }
+        if (restoreSnapshot && target != null) {
+            effects.playEnd(target, getType());
+            target.getWorld().playSound(target.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1.0f, 0.8f);
+        }
+        if (lockedPlayers.isEmpty()) {
+            HandlerList.unregisterAll(this);
+        }
+    }
+
+    private void removeActiveTargetEntries(UUID targetId) {
+        activeTargets.entrySet().removeIf(entry -> targetId.equals(entry.getValue()));
     }
 }

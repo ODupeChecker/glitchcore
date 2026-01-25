@@ -32,7 +32,6 @@ import java.util.UUID;
 public class HypnosisGlitch extends Glitch implements Listener {
     private static final String HYPNOSIS_TITLE = "§4Hypnosis Trap";
     private static final int INVENTORY_SIZE = 27;
-    private static final int ESCAPE_CLICKS_REQUIRED = 1;
     private static final ItemStack RED_GLASS = createPane(Material.RED_STAINED_GLASS_PANE, "§cEscape?");
     private static final ItemStack GREEN_GLASS = createPane(Material.LIME_STAINED_GLASS_PANE, "§aClick me!");
     private static final Random RANDOM = new Random();
@@ -41,6 +40,7 @@ public class HypnosisGlitch extends Glitch implements Listener {
     private final GlitchSMP plugin;
     private final GlitchEffects effects;
     private final Map<UUID, HypnosisSession> sessions = new HashMap<>();
+    private final int escapeClicksRequired;
 
     public HypnosisGlitch(GlitchSMP plugin, GlitchSettings.GlitchProfile profile) {
         super(
@@ -52,6 +52,7 @@ public class HypnosisGlitch extends Glitch implements Listener {
         );
         this.plugin = plugin;
         this.effects = plugin.getGlitchEffects();
+        this.escapeClicksRequired = plugin.getGlitchSettings().getHypnosisEscapeClicks();
     }
 
     @Override
@@ -101,7 +102,7 @@ public class HypnosisGlitch extends Glitch implements Listener {
         }
         if (event.getRawSlot() == session.greenSlot()) {
             int progress = session.incrementProgress();
-            if (progress >= ESCAPE_CLICKS_REQUIRED) {
+            if (progress >= escapeClicksRequired) {
                 session.markCompleted();
                 clearSession(player.getUniqueId());
                 player.closeInventory();
