@@ -69,7 +69,8 @@ public class RewindGlitch extends Glitch {
                 player.teleport(location);
             }
 
-            AttributeInstance maxHealthAttribute = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+            Attribute maxHealthType = resolveMaxHealthAttribute();
+            AttributeInstance maxHealthAttribute = maxHealthType != null ? player.getAttribute(maxHealthType) : null;
             double maxHealth = maxHealthAttribute != null ? maxHealthAttribute.getValue() : player.getHealth();
             double health = state.health();
             if (Double.isFinite(health)) {
@@ -121,6 +122,18 @@ public class RewindGlitch extends Glitch {
             }
         } catch (Exception exception) {
             plugin.getLogger().warning("Failed to restore rewind state for " + player.getName() + ": " + exception.getMessage());
+        }
+    }
+
+    private Attribute resolveMaxHealthAttribute() {
+        try {
+            return Attribute.valueOf("GENERIC_MAX_HEALTH");
+        } catch (IllegalArgumentException ignored) {
+            try {
+                return Attribute.valueOf("MAX_HEALTH");
+            } catch (IllegalArgumentException secondIgnored) {
+                return null;
+            }
         }
     }
 
