@@ -127,6 +127,10 @@ public class ActivationManager implements Listener {
             player.sendMessage(ChatColor.RED + "No glitch equipped in " + (isSneaking ? "left" : "right") + " slot!");
             return;
         }
+        if (!glitchManager.isGlitchEnabled(glitchToActivate.getType())) {
+            player.sendMessage(ChatColor.RED + glitchToActivate.getName() + " is currently disabled.");
+            return;
+        }
         
         // Try to activate the glitch
         boolean success = glitchManager.activateGlitch(player, glitchToActivate);

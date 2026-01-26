@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -31,6 +32,7 @@ public class GlitchManager {
     
     // Map of active glitches and their scheduled deactivation tasks
     private final Map<UUID, Map<UUID, Integer>> activeGlitchTasks = new ConcurrentHashMap<>();
+    private final Set<GlitchType> disabledGlitches = ConcurrentHashMap.newKeySet();
     private final NamespacedKey[] equippedSlotKeys;
     
     /**
@@ -104,6 +106,9 @@ public class GlitchManager {
         
         // Check if player has the glitch equipped
         if (!isGlitchEquipped(player, glitch)) {
+            return false;
+        }
+        if (!isGlitchEnabled(glitch.getType())) {
             return false;
         }
         
@@ -225,6 +230,54 @@ public class GlitchManager {
             return null;
         }
         return slots[slot];
+    }
+
+    /**
+     * Checks whether a glitch type is enabled.
+     *
+     * @param type The glitch type to check
+     * @return true if enabled, false if disabled
+     */
+    public boolean isGlitchEnabled(GlitchType type) {
+        return !disabledGlitches.contains(type);
+    }
+
+    /**
+     * Disable a glitch type and end any active instances for online players.
+     *
+     * @param type The glitch type to disable
+     */
+    public void disableGlitch(GlitchType type) {
+        disabledGlitches.add(type);
+        for (Player player : plugin.getServer().getOnlinePlayers()) {
+            Glitch[] slots = equippedGlitches.get(player.getUniqueId());
+            if (slots == null) {
+                continue;
+            }
+            for (Glitch glitch : slots) {
+                if (glitch != null && glitch.getType() == type && isGlitchActive(player, glitch)) {
+                    deactivateGlitch(player, glitch);
+                }
+            }
+        }
+    }
+
+    /**
+     * Enable a glitch type.
+     *
+     * @param type The glitch type to enable
+     */
+    public void enableGlitch(GlitchType type) {
+        disabledGlitches.remove(type);
+    }
+
+    /**
+     * Gets the set of disabled glitches.
+     *
+     * @return A set of disabled glitch types
+     */
+    public Set<GlitchType> getDisabledGlitches() {
+        return Collections.unmodifiableSet(disabledGlitches);
     }
     
     /**
