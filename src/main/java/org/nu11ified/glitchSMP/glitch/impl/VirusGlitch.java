@@ -1,5 +1,6 @@
 package org.nu11ified.glitchSMP.glitch.impl;
 
+import org.bukkit.Color;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -66,7 +67,15 @@ public class VirusGlitch extends Glitch implements Listener {
         }
         applyVirus(attacker, target);
         target.getWorld().playSound(target.getLocation(), Sound.ENTITY_HUSK_AMBIENT, 0.6f, 0.8f);
-        target.getWorld().spawnParticle(Particle.ENTITY_EFFECT, target.getLocation().add(0, 1, 0), 14, 0.4, 0.4, 0.4, 0.1);
+        target.getWorld().spawnParticle(
+            Particle.ENTITY_EFFECT,
+            target.getLocation().add(0, 1, 0),
+            14,
+            0.4,
+            0.4,
+            0.4,
+            Color.fromRGB(94, 205, 97)
+        );
     }
 
     private void applyVirus(Player source, Player target) {
