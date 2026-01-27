@@ -9,6 +9,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
@@ -76,6 +77,16 @@ public class TelekinesisGlitch extends Glitch implements Listener {
         startTelekinesisControl(player, target);
     }
 
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        Player player = event.getPlayer();
+        UUID playerId = player.getUniqueId();
+        primedPlayers.remove(playerId);
+        if (controlTasks.containsKey(playerId)) {
+            stopTelekinesisControl(playerId, player);
+        }
+    }
+
     private void startTelekinesisControl(Player caster, Player target) {
         long controlDurationMillis = plugin.getGlitchSettings().getTelekinesisControlDurationMillis();
         int durationTicks = (int) (controlDurationMillis / 50L);
@@ -123,13 +134,20 @@ public class TelekinesisGlitch extends Glitch implements Listener {
     }
 
     private void stopTelekinesisControl(UUID targetId) {
+        stopTelekinesisControl(targetId, plugin.getServer().getPlayer(targetId));
+    }
+
+    private void stopTelekinesisControl(UUID targetId, Player target) {
         BukkitTask task = controlTasks.remove(targetId);
         if (task != null) {
             task.cancel();
         }
-        Player target = plugin.getServer().getPlayer(targetId);
         if (target != null) {
+            target.removePotionEffect(PotionEffectType.LEVITATION);
+            target.removePotionEffect(PotionEffectType.GLOWING);
             target.setGravity(true);
+            target.setFallDistance(0f);
+            target.setVelocity(new Vector(0, 0, 0));
         }
     }
 

@@ -71,9 +71,8 @@ public class HypnosisGlitch extends Glitch implements Listener {
         }
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         Inventory inventory = Bukkit.createInventory(target, INVENTORY_SIZE, HYPNOSIS_TITLE);
-        fillWithRed(inventory);
         int greenSlot = RANDOM.nextInt(INVENTORY_SIZE);
-        inventory.setItem(greenSlot, GREEN_GLASS.clone());
+        inventory.setContents(buildContents(greenSlot));
         sessions.put(target.getUniqueId(), new HypnosisSession(inventory, greenSlot));
         ACTIVE_TARGETS.add(target.getUniqueId());
         target.openInventory(inventory);
@@ -93,7 +92,11 @@ public class HypnosisGlitch extends Glitch implements Listener {
             return;
         }
         HypnosisSession session = sessions.get(player.getUniqueId());
-        if (session == null || event.getInventory() != session.inventory()) {
+        if (session == null || event.getView().getTopInventory() != session.inventory()) {
+            return;
+        }
+        if (event.getRawSlot() >= session.inventory().getSize()) {
+            event.setCancelled(true);
             return;
         }
         event.setCancelled(true);
@@ -121,7 +124,7 @@ public class HypnosisGlitch extends Glitch implements Listener {
             return;
         }
         HypnosisSession session = sessions.get(player.getUniqueId());
-        if (session == null || event.getInventory() != session.inventory()) {
+        if (session == null || event.getView().getTopInventory() != session.inventory()) {
             return;
         }
         event.setCancelled(true);
@@ -139,14 +142,14 @@ public class HypnosisGlitch extends Glitch implements Listener {
         session.setReopening(true);
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             HypnosisSession currentSession = sessions.get(player.getUniqueId());
-            if (currentSession == null || currentSession.isCompleted()) {
+            if (currentSession == null || currentSession.isCompleted() || !player.isOnline()) {
                 return;
             }
             if (player.getOpenInventory().getTopInventory() != currentSession.inventory()) {
                 player.openInventory(currentSession.inventory());
             }
             currentSession.setReopening(false);
-        }, 1L);
+        }, 2L);
     }
 
     @EventHandler
@@ -158,17 +161,18 @@ public class HypnosisGlitch extends Glitch implements Listener {
     }
 
     private void refreshGreenSlot(HypnosisSession session) {
-        Inventory inventory = session.inventory();
         int nextSlot = RANDOM.nextInt(INVENTORY_SIZE);
         session.setGreenSlot(nextSlot);
-        fillWithRed(inventory);
-        inventory.setItem(nextSlot, GREEN_GLASS.clone());
+        session.inventory().setContents(buildContents(nextSlot));
     }
 
-    private static void fillWithRed(Inventory inventory) {
-        for (int i = 0; i < inventory.getSize(); i++) {
-            inventory.setItem(i, RED_GLASS.clone());
+    private static ItemStack[] buildContents(int greenSlot) {
+        ItemStack[] contents = new ItemStack[INVENTORY_SIZE];
+        for (int i = 0; i < INVENTORY_SIZE; i++) {
+            contents[i] = RED_GLASS.clone();
         }
+        contents[greenSlot] = GREEN_GLASS.clone();
+        return contents;
     }
 
     private static ItemStack createPane(Material material, String name) {

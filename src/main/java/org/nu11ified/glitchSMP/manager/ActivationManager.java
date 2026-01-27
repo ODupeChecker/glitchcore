@@ -1,9 +1,11 @@
 package org.nu11ified.glitchSMP.manager;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -112,6 +114,10 @@ public class ActivationManager implements Listener {
             player.sendMessage(ChatColor.YELLOW + "Right-click a glitch item to equip it.");
             return;
         }
+        if (WorldGuardHook.isInRegion(player, "spawn")) {
+            player.sendMessage(ChatColor.RED + "Abilities are disabled in spawn.");
+            return;
+        }
         if (WorldGuardHook.isInRegion(player, plugin.getGlitchSettings().getDisabledRegion())) {
             player.sendMessage(ChatColor.RED + "Abilities only work outside of spawn");
             return;
@@ -125,6 +131,10 @@ public class ActivationManager implements Listener {
         Glitch glitchToActivate = glitchManager.getEquippedGlitch(player, glitchIndex);
         if (glitchToActivate == null) {
             player.sendMessage(ChatColor.RED + "No glitch equipped in " + (isSneaking ? "left" : "right") + " slot!");
+            return;
+        }
+        if (!glitchManager.isGlitchEnabled(glitchToActivate.getType())) {
+            player.sendMessage(ChatColor.RED + glitchToActivate.getName() + " is currently disabled.");
             return;
         }
         
@@ -196,6 +206,40 @@ public class ActivationManager implements Listener {
             player.sendMessage(ChatColor.RED + "Glitches cannot be placed in the offhand slot.");
         }
     }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onInventoryClickUnstackable(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player)) {
+            return;
+        }
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            ItemStack cursor = player.getItemOnCursor();
+            ItemStack clicked = event.getInventory().getItem(event.getSlot());
+            ensureUniqueGlitchId(cursor);
+            ensureUniqueGlitchId(clicked);
+            java.util.Optional<java.util.UUID> cursorId = glitchItemFactory.getGlitchItemId(cursor);
+            java.util.Optional<java.util.UUID> clickedId = glitchItemFactory.getGlitchItemId(clicked);
+            if (cursorId.isPresent() && cursorId.equals(clickedId)) {
+                glitchItemFactory.forceNewGlitchItemId(cursor);
+                player.setItemOnCursor(cursor);
+            }
+        });
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onInventoryDragUnstackable(InventoryDragEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player)) {
+            return;
+        }
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            ItemStack cursor = player.getItemOnCursor();
+            ensureUniqueGlitchId(cursor);
+            for (int rawSlot : event.getRawSlots()) {
+                ItemStack item = event.getView().getItem(rawSlot);
+                ensureUniqueGlitchId(item);
+            }
+        });
+    }
     
     /**
      * Handles player sneaking events to track crouch state
@@ -253,5 +297,15 @@ public class ActivationManager implements Listener {
             return false;
         }
         return glitchItemFactory.isGlitchItem(item);
+    }
+
+    private void ensureUniqueGlitchId(ItemStack item) {
+        if (item == null) {
+            return;
+        }
+        if (!glitchItemFactory.isGlitchItem(item)) {
+            return;
+        }
+        glitchItemFactory.ensureGlitchItemId(item);
     }
 }

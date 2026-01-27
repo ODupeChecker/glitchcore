@@ -75,6 +75,10 @@ public final class GlitchSMP extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(activationManager, this);
         getServer().getPluginManager().registerEvents(craftingLimiter, this);
         
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            glitchManager.loadPlayerData(player);
+        }
+
         // Start displaying glitches for all online players
         glitchDisplay.startDisplayingForAll();
         
@@ -118,6 +122,7 @@ public final class GlitchSMP extends JavaPlugin implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
+        glitchManager.loadPlayerData(player);
         glitchDisplay.startDisplaying(player);
     }
     

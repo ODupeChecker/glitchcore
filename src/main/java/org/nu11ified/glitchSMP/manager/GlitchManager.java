@@ -1,8 +1,13 @@
 package org.nu11ified.glitchSMP.manager;
 
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 import org.nu11ified.glitchSMP.GlitchSMP;
 import org.nu11ified.glitchSMP.glitch.Glitch;
+import org.nu11ified.glitchSMP.glitch.GlitchType;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -27,6 +33,8 @@ public class GlitchManager {
     
     // Map of active glitches and their scheduled deactivation tasks
     private final Map<UUID, Map<UUID, Integer>> activeGlitchTasks = new ConcurrentHashMap<>();
+    private final Set<GlitchType> disabledGlitches = ConcurrentHashMap.newKeySet();
+    private final NamespacedKey[] equippedSlotKeys;
     
     /**
      * Constructor for GlitchManager
@@ -35,6 +43,10 @@ public class GlitchManager {
      */
     public GlitchManager(GlitchSMP plugin) {
         this.plugin = plugin;
+        this.equippedSlotKeys = new NamespacedKey[] {
+            new NamespacedKey(plugin, "glitch_slot_0"),
+            new NamespacedKey(plugin, "glitch_slot_1")
+        };
     }
     
     /**
@@ -47,10 +59,16 @@ public class GlitchManager {
     public OptionalInt equipGlitch(Player player, Glitch glitch) {
         UUID playerUUID = player.getUniqueId();
         Glitch[] slots = equippedGlitches.computeIfAbsent(playerUUID, k -> new Glitch[MAX_EQUIPPED_GLITCHES]);
+
+        int duplicateSlot = findSlotWithType(slots, glitch.getType());
+        if (duplicateSlot != -1) {
+            withdrawSlot(player, duplicateSlot);
+        }
         
         for (int i = 0; i < MAX_EQUIPPED_GLITCHES; i++) {
             if (slots[i] == null) {
                 slots[i] = glitch;
+                persistGlitchSlot(player, i, glitch);
                 return OptionalInt.of(i);
             }
         }
@@ -78,6 +96,7 @@ public class GlitchManager {
         }
         
         slots[slot] = null;
+        persistGlitchSlot(player, slot, null);
         return removed;
     }
     
@@ -93,6 +112,9 @@ public class GlitchManager {
         
         // Check if player has the glitch equipped
         if (!isGlitchEquipped(player, glitch)) {
+            return false;
+        }
+        if (!isGlitchEnabled(glitch.getType())) {
             return false;
         }
         
@@ -215,6 +237,54 @@ public class GlitchManager {
         }
         return slots[slot];
     }
+
+    /**
+     * Checks whether a glitch type is enabled.
+     *
+     * @param type The glitch type to check
+     * @return true if enabled, false if disabled
+     */
+    public boolean isGlitchEnabled(GlitchType type) {
+        return !disabledGlitches.contains(type);
+    }
+
+    /**
+     * Disable a glitch type and end any active instances for online players.
+     *
+     * @param type The glitch type to disable
+     */
+    public void disableGlitch(GlitchType type) {
+        disabledGlitches.add(type);
+        for (Player player : plugin.getServer().getOnlinePlayers()) {
+            Glitch[] slots = equippedGlitches.get(player.getUniqueId());
+            if (slots == null) {
+                continue;
+            }
+            for (Glitch glitch : slots) {
+                if (glitch != null && glitch.getType() == type && isGlitchActive(player, glitch)) {
+                    deactivateGlitch(player, glitch);
+                }
+            }
+        }
+    }
+
+    /**
+     * Enable a glitch type.
+     *
+     * @param type The glitch type to enable
+     */
+    public void enableGlitch(GlitchType type) {
+        disabledGlitches.remove(type);
+    }
+
+    /**
+     * Gets the set of disabled glitches.
+     *
+     * @return A set of disabled glitch types
+     */
+    public Set<GlitchType> getDisabledGlitches() {
+        return Collections.unmodifiableSet(disabledGlitches);
+    }
     
     /**
      * Gets a copy of the equipped glitch slots
@@ -229,6 +299,35 @@ public class GlitchManager {
             return new Glitch[MAX_EQUIPPED_GLITCHES];
         }
         return slots.clone();
+    }
+
+    /**
+     * Loads equipped glitches for a player from persistent data storage.
+     *
+     * @param player The player to load glitches for
+     */
+    public void loadPlayerData(Player player) {
+        Glitch[] slots = new Glitch[MAX_EQUIPPED_GLITCHES];
+        PersistentDataContainer container = player.getPersistentDataContainer();
+
+        for (int i = 0; i < MAX_EQUIPPED_GLITCHES; i++) {
+            String glitchName = container.get(equippedSlotKeys[i], PersistentDataType.STRING);
+            if (glitchName == null || glitchName.isEmpty()) {
+                continue;
+            }
+            try {
+                GlitchType glitchType = GlitchType.valueOf(glitchName);
+                slots[i] = plugin.getGlitchFactory().createGlitch(glitchType);
+            } catch (IllegalArgumentException ignored) {
+                container.remove(equippedSlotKeys[i]);
+            }
+        }
+
+        equippedGlitches.put(player.getUniqueId(), slots);
+        int duplicateSlot = findDuplicateSlot(slots);
+        if (duplicateSlot != -1) {
+            withdrawSlot(player, duplicateSlot);
+        }
     }
     
     /**
@@ -253,6 +352,58 @@ public class GlitchManager {
         activeGlitchTasks.remove(playerUUID);
         
         // We don't remove equipped glitches here as they should persist
-        // between sessions. This would be handled by a data storage system.
+        // between sessions via persistent data storage.
+    }
+
+    private void persistGlitchSlot(Player player, int slot, Glitch glitch) {
+        if (slot < 0 || slot >= MAX_EQUIPPED_GLITCHES) {
+            return;
+        }
+        PersistentDataContainer container = player.getPersistentDataContainer();
+        if (glitch == null) {
+            container.remove(equippedSlotKeys[slot]);
+        } else {
+            container.set(equippedSlotKeys[slot], PersistentDataType.STRING, glitch.getType().name());
+        }
+    }
+
+    private int findSlotWithType(Glitch[] slots, GlitchType type) {
+        if (slots == null) {
+            return -1;
+        }
+        for (int i = 0; i < slots.length; i++) {
+            Glitch slotGlitch = slots[i];
+            if (slotGlitch != null && slotGlitch.getType() == type) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private int findDuplicateSlot(Glitch[] slots) {
+        if (slots == null || slots.length < 2) {
+            return -1;
+        }
+        Glitch first = slots[0];
+        Glitch second = slots[1];
+        if (first != null && second != null && first.getType() == second.getType()) {
+            return 1;
+        }
+        return -1;
+    }
+
+    private void withdrawSlot(Player player, int slot) {
+        Glitch removed = unequipGlitch(player, slot);
+        if (removed == null) {
+            return;
+        }
+        ItemStack item = plugin.getGlitchItemFactory().createGlitchItem(removed.getType());
+        if (player.getInventory().firstEmpty() == -1) {
+            player.getWorld().dropItemNaturally(player.getLocation(), item);
+        } else {
+            player.getInventory().addItem(item);
+        }
+        String slotName = slot == 0 ? "right" : "left";
+        player.sendMessage("§cDuplicate glitch removed from the " + slotName + " slot and withdrawn.");
     }
 }
