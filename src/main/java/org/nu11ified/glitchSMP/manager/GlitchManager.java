@@ -2,6 +2,7 @@ package org.nu11ified.glitchSMP.manager;
 
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.nu11ified.glitchSMP.GlitchSMP;
@@ -58,6 +59,11 @@ public class GlitchManager {
     public OptionalInt equipGlitch(Player player, Glitch glitch) {
         UUID playerUUID = player.getUniqueId();
         Glitch[] slots = equippedGlitches.computeIfAbsent(playerUUID, k -> new Glitch[MAX_EQUIPPED_GLITCHES]);
+
+        int duplicateSlot = findSlotWithType(slots, glitch.getType());
+        if (duplicateSlot != -1) {
+            withdrawSlot(player, duplicateSlot);
+        }
         
         for (int i = 0; i < MAX_EQUIPPED_GLITCHES; i++) {
             if (slots[i] == null) {
@@ -318,6 +324,10 @@ public class GlitchManager {
         }
 
         equippedGlitches.put(player.getUniqueId(), slots);
+        int duplicateSlot = findDuplicateSlot(slots);
+        if (duplicateSlot != -1) {
+            withdrawSlot(player, duplicateSlot);
+        }
     }
     
     /**
@@ -355,5 +365,45 @@ public class GlitchManager {
         } else {
             container.set(equippedSlotKeys[slot], PersistentDataType.STRING, glitch.getType().name());
         }
+    }
+
+    private int findSlotWithType(Glitch[] slots, GlitchType type) {
+        if (slots == null) {
+            return -1;
+        }
+        for (int i = 0; i < slots.length; i++) {
+            Glitch slotGlitch = slots[i];
+            if (slotGlitch != null && slotGlitch.getType() == type) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private int findDuplicateSlot(Glitch[] slots) {
+        if (slots == null || slots.length < 2) {
+            return -1;
+        }
+        Glitch first = slots[0];
+        Glitch second = slots[1];
+        if (first != null && second != null && first.getType() == second.getType()) {
+            return 1;
+        }
+        return -1;
+    }
+
+    private void withdrawSlot(Player player, int slot) {
+        Glitch removed = unequipGlitch(player, slot);
+        if (removed == null) {
+            return;
+        }
+        ItemStack item = plugin.getGlitchItemFactory().createGlitchItem(removed.getType());
+        if (player.getInventory().firstEmpty() == -1) {
+            player.getWorld().dropItemNaturally(player.getLocation(), item);
+        } else {
+            player.getInventory().addItem(item);
+        }
+        String slotName = slot == 0 ? "right" : "left";
+        player.sendMessage("§cDuplicate glitch removed from the " + slotName + " slot and withdrawn.");
     }
 }

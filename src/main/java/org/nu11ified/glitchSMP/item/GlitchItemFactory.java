@@ -21,10 +21,12 @@ import java.util.Optional;
 public class GlitchItemFactory {
     private static final Material GLITCH_ITEM_MATERIAL = Material.CLAY_BALL;
     private final NamespacedKey glitchTypeKey;
+    private final NamespacedKey glitchIdKey;
     private final GlitchResourcePackRegistry resourcePackRegistry;
 
     public GlitchItemFactory(GlitchSMP plugin, GlitchResourcePackRegistry resourcePackRegistry) {
         this.glitchTypeKey = new NamespacedKey(plugin, "glitch_type");
+        this.glitchIdKey = new NamespacedKey(plugin, "glitch_item_id");
         this.resourcePackRegistry = resourcePackRegistry;
     }
 
@@ -37,6 +39,7 @@ public class GlitchItemFactory {
             meta.setCustomModelData(resourcePackRegistry.getModelData(glitchType));
             PersistentDataContainer container = meta.getPersistentDataContainer();
             container.set(glitchTypeKey, PersistentDataType.STRING, glitchType.name());
+            container.set(glitchIdKey, PersistentDataType.STRING, java.util.UUID.randomUUID().toString());
 
             List<String> lore = new ArrayList<>();
             lore.add(ChatColor.GRAY + glitchType.getDescription());
@@ -50,6 +53,55 @@ public class GlitchItemFactory {
         }
 
         return item;
+    }
+
+    public boolean ensureGlitchItemId(ItemStack item) {
+        return setGlitchItemId(item, null, false);
+    }
+
+    public boolean forceNewGlitchItemId(ItemStack item) {
+        return setGlitchItemId(item, java.util.UUID.randomUUID(), true);
+    }
+
+    public java.util.Optional<java.util.UUID> getGlitchItemId(ItemStack item) {
+        if (item == null || item.getType() != GLITCH_ITEM_MATERIAL) {
+            return java.util.Optional.empty();
+        }
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) {
+            return java.util.Optional.empty();
+        }
+        PersistentDataContainer container = meta.getPersistentDataContainer();
+        if (!container.has(glitchIdKey, PersistentDataType.STRING)) {
+            return java.util.Optional.empty();
+        }
+        String value = container.get(glitchIdKey, PersistentDataType.STRING);
+        if (value == null || value.isEmpty()) {
+            return java.util.Optional.empty();
+        }
+        try {
+            return java.util.Optional.of(java.util.UUID.fromString(value));
+        } catch (IllegalArgumentException ignored) {
+            return java.util.Optional.empty();
+        }
+    }
+
+    private boolean setGlitchItemId(ItemStack item, java.util.UUID id, boolean force) {
+        if (!isGlitchItem(item)) {
+            return false;
+        }
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) {
+            return false;
+        }
+        PersistentDataContainer container = meta.getPersistentDataContainer();
+        if (!force && container.has(glitchIdKey, PersistentDataType.STRING)) {
+            return false;
+        }
+        java.util.UUID resolved = id == null ? java.util.UUID.randomUUID() : id;
+        container.set(glitchIdKey, PersistentDataType.STRING, resolved.toString());
+        item.setItemMeta(meta);
+        return true;
     }
 
     public boolean isGlitchItem(ItemStack item) {
