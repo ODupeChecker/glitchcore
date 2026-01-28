@@ -23,6 +23,11 @@ public class GlitchSettings {
     private String disabledRegion;
     private int hypnosisEscapeClicks;
     private long telekinesisControlDurationMillis;
+    private int dashPassiveHitThreshold;
+    private double dashPassiveDamage;
+    private int dashBarrageCount;
+    private double dashBarrageDamage;
+    private int dashBarrageIntervalTicks;
 
     public GlitchSettings(GlitchSMP plugin) {
         this.plugin = plugin;
@@ -64,6 +69,7 @@ public class GlitchSettings {
         loadProfiles();
         this.hypnosisEscapeClicks = readEscapeClicks();
         this.telekinesisControlDurationMillis = readTelekinesisControlDurationMillis();
+        readDashSettings();
     }
 
     private long toMillis(ConfigurationSection section, String key, long fallbackMillis) {
@@ -149,6 +155,26 @@ public class GlitchSettings {
         return telekinesisControlDurationMillis;
     }
 
+    public int getDashPassiveHitThreshold() {
+        return dashPassiveHitThreshold;
+    }
+
+    public double getDashPassiveDamage() {
+        return dashPassiveDamage;
+    }
+
+    public int getDashBarrageCount() {
+        return dashBarrageCount;
+    }
+
+    public double getDashBarrageDamage() {
+        return dashBarrageDamage;
+    }
+
+    public int getDashBarrageIntervalTicks() {
+        return dashBarrageIntervalTicks;
+    }
+
     public FileConfiguration getRawConfig() {
         return config;
     }
@@ -183,5 +209,14 @@ public class GlitchSettings {
             return fallback;
         }
         return entry.getLong("controlDurationSeconds") * 1000L;
+    }
+
+    private void readDashSettings() {
+        ConfigurationSection entry = config.getConfigurationSection("perGlitch.DASH");
+        this.dashPassiveHitThreshold = entry != null ? entry.getInt("passiveHitThreshold", 10) : 10;
+        this.dashPassiveDamage = entry != null ? entry.getDouble("passiveDamage", 5.0) : 5.0;
+        this.dashBarrageCount = entry != null ? entry.getInt("barrageCount", 10) : 10;
+        this.dashBarrageDamage = entry != null ? entry.getDouble("barrageDamage", 5.0) : 5.0;
+        this.dashBarrageIntervalTicks = entry != null ? entry.getInt("barrageIntervalTicks", 2) : 2;
     }
 }
