@@ -23,6 +23,7 @@ public class GlitchSettings {
     private String disabledRegion;
     private int hypnosisEscapeClicks;
     private long telekinesisControlDurationMillis;
+    private WindburstConfig windburstConfig;
 
     public GlitchSettings(GlitchSMP plugin) {
         this.plugin = plugin;
@@ -64,6 +65,7 @@ public class GlitchSettings {
         loadProfiles();
         this.hypnosisEscapeClicks = readEscapeClicks();
         this.telekinesisControlDurationMillis = readTelekinesisControlDurationMillis();
+        this.windburstConfig = readWindburstConfig();
     }
 
     private long toMillis(ConfigurationSection section, String key, long fallbackMillis) {
@@ -149,6 +151,10 @@ public class GlitchSettings {
         return telekinesisControlDurationMillis;
     }
 
+    public WindburstConfig getWindburstConfig() {
+        return windburstConfig;
+    }
+
     public FileConfiguration getRawConfig() {
         return config;
     }
@@ -163,6 +169,9 @@ public class GlitchSettings {
     }
 
     public record CombatDefaults(int damageTicks, int intervalTicks, double knockbackStrength) {
+    }
+
+    public record WindburstConfig(int passiveHitThreshold, int barrageCount, int barrageIntervalTicks, double barrageDamage) {
     }
 
     private int readEscapeClicks() {
@@ -183,5 +192,19 @@ public class GlitchSettings {
             return fallback;
         }
         return entry.getLong("controlDurationSeconds") * 1000L;
+    }
+
+    private WindburstConfig readWindburstConfig() {
+        ConfigurationSection entry = config.getConfigurationSection("perGlitch.WINDBURST");
+        int passiveHits = entry != null ? entry.getInt("passiveHitThreshold", 10) : 10;
+        int barrageCount = entry != null ? entry.getInt("barrageCount", 6) : 6;
+        int barrageIntervalTicks = entry != null ? entry.getInt("barrageIntervalTicks", 4) : 4;
+        double barrageDamage = entry != null ? entry.getDouble("barrageDamage", 5.0) : 5.0;
+        return new WindburstConfig(
+            Math.max(1, passiveHits),
+            Math.max(1, barrageCount),
+            Math.max(1, barrageIntervalTicks),
+            Math.max(0.0, barrageDamage)
+        );
     }
 }

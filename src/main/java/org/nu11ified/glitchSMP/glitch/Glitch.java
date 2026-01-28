@@ -160,6 +160,22 @@ public abstract class Glitch {
     public UUID getId() {
         return id;
     }
+
+    /**
+     * Called when the glitch is equipped by a player.
+     *
+     * @param player The player equipping the glitch
+     */
+    public void onEquip(Player player) {
+    }
+
+    /**
+     * Called when the glitch is unequipped by a player.
+     *
+     * @param player The player unequipping the glitch
+     */
+    public void onUnequip(Player player) {
+    }
     
     /**
      * Implementation of the glitch activation effect
