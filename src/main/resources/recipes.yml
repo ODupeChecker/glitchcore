@@ -20,6 +20,7 @@ items:
   L: minecraft:lead
   S: minecraft:stick
   D: minecraft:diamond
+  W: minecraft:wind_charge
 
 # RECIPES:
 # Each glitch recipe uses the letters defined above in a 3x3 grid
@@ -78,6 +79,11 @@ DASH:
   - "F F F"
   - "F F F"
   - "F F F"
+
+WINDCHARGE:
+  - "W W W"
+  - "W W W"
+  - "W W W"
 
 HYPNOSIS:
   - "M M M"

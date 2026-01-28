@@ -89,11 +89,19 @@ public enum GlitchType {
     ),
     DASH(
         "Dash Glitch",
+        "Launch yourself forward in a violent burst.",
+        secondsToMillis(30),
+        secondsToMillis(2),
+        7,
+        ""
+    ),
+    WINDCHARGE(
+        "Windcharge Glitch",
         "Every tenth hit fires a wind charge and your ability unleashes a barrage.",
         secondsToMillis(30),
         0,
-        7,
-        ""
+        24,
+        ""
     ),
     HYPNOSIS(
         "Hypnosis Glitch",

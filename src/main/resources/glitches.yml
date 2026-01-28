@@ -56,6 +56,9 @@ resourcePack:
   DASH:
     icon: ""
     modelData: 7
+  WINDCHARGE:
+    icon: ""
+    modelData: 24
   HYPNOSIS:
     icon: ""
     modelData: 9
@@ -106,6 +109,10 @@ perGlitch:
     cooldownSeconds: 90
     baseDamage: 2.0
   DASH:
+    durationSeconds: 2
+    cooldownSeconds: 30
+    baseDamage: 3.0
+  WINDCHARGE:
     durationSeconds: 0
     cooldownSeconds: 30
     passiveHitThreshold: 10

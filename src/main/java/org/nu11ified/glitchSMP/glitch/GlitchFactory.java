@@ -18,6 +18,7 @@ import org.nu11ified.glitchSMP.glitch.impl.RewindGlitch;
 import org.nu11ified.glitchSMP.glitch.impl.TelekinesisGlitch;
 import org.nu11ified.glitchSMP.glitch.impl.VirusGlitch;
 import org.nu11ified.glitchSMP.glitch.impl.DashGlitch;
+import org.nu11ified.glitchSMP.glitch.impl.WindchargeGlitch;
 
 /**
  * Factory class for creating glitch instances.
@@ -65,6 +66,8 @@ public class GlitchFactory {
                 return new FreezeGlitch(plugin, profile);
             case DASH:
                 return new DashGlitch(plugin, profile);
+            case WINDCHARGE:
+                return new WindchargeGlitch(plugin, profile);
             case HYPNOSIS:
                 return new HypnosisGlitch(plugin, profile);
             case GRAVITY:

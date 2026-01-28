@@ -1,34 +1,35 @@
 package org.nu11ified.glitchSMP.glitch.impl;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Particle;
 import org.bukkit.Sound;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.WindCharge;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.ProjectileHitEvent;
-import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 import org.nu11ified.glitchSMP.GlitchSMP;
 import org.nu11ified.glitchSMP.config.GlitchSettings;
 import org.nu11ified.glitchSMP.effects.GlitchEffects;
 import org.nu11ified.glitchSMP.glitch.Glitch;
 import org.nu11ified.glitchSMP.glitch.GlitchType;
-import org.nu11ified.glitchSMP.util.WorldGuardHook;
+import org.nu11ified.glitchSMP.util.DamageTickHelper;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class DashGlitch extends Glitch implements Listener {
+public class DashGlitch extends Glitch {
+    private static final String MODIFIER_NAME = "dash_resist";
+
     private final GlitchSMP plugin;
     private final GlitchEffects effects;
-    private final Map<UUID, Integer> hitCounters = new HashMap<>();
-    private final NamespacedKey projectileKey;
-    private final NamespacedKey damageKey;
+    private final DamageTickHelper damageTickHelper;
+    private final GlitchSettings.GlitchProfile profile;
+    private final Map<UUID, BukkitTask> cleanupTasks = new HashMap<>();
 
     public DashGlitch(GlitchSMP plugin, GlitchSettings.GlitchProfile profile) {
         super(
@@ -40,99 +41,45 @@ public class DashGlitch extends Glitch implements Listener {
         );
         this.plugin = plugin;
         this.effects = plugin.getGlitchEffects();
-        this.projectileKey = new NamespacedKey(plugin, "dash_windcharge");
-        this.damageKey = new NamespacedKey(plugin, "dash_windcharge_damage");
-        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+        this.damageTickHelper = plugin.getDamageTickHelper();
+        this.profile = profile;
     }
 
     @Override
     protected void onActivate(Player player) {
+        Vector velocity = player.getLocation().getDirection().normalize().multiply(2.0);
+        player.setVelocity(velocity);
+        player.getWorld().spawnParticle(Particle.CLOUD, player.getLocation().add(0, 1, 0), 12, 0.3, 0.3, 0.3, 0.05);
+        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_FLAP, 1.0f, 1.2f);
         effects.playActivation(player, getType());
-        startBarrage(player);
+
+        AttributeModifier modifier = new AttributeModifier(new NamespacedKey(plugin, MODIFIER_NAME), 1.0, AttributeModifier.Operation.ADD_NUMBER);
+        if (player.getAttribute(Attribute.KNOCKBACK_RESISTANCE) != null) {
+            player.getAttribute(Attribute.KNOCKBACK_RESISTANCE).addModifier(modifier);
+        }
+
+        cleanupTasks.put(player.getUniqueId(), Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (player.getAttribute(Attribute.KNOCKBACK_RESISTANCE) != null) {
+                player.getAttribute(Attribute.KNOCKBACK_RESISTANCE).removeModifier(modifier);
+            }
+        }, 20L));
+
+        if (profile.baseDamage() > 0) {
+            Collection<LivingEntity> targets = player.getLocation().getNearbyLivingEntities(2.5, entity -> entity != player);
+            for (LivingEntity target : targets) {
+                damageTickHelper.applyDamageTicks(player, target, getType(), profile.baseDamage(), profile.damageTicks(),
+                    plugin.getGlitchSettings().getCombatDefaults().intervalTicks(),
+                    plugin.getGlitchSettings().getCombatDefaults().knockbackStrength() * profile.knockbackMultiplier());
+            }
+        }
     }
 
     @Override
     protected void onDeactivate(Player player) {
+        BukkitTask task = cleanupTasks.remove(player.getUniqueId());
+        if (task != null) {
+            task.cancel();
+        }
         effects.playEnd(player, getType());
-    }
-
-    @EventHandler
-    public void onEntityDamage(EntityDamageByEntityEvent event) {
-        if (!(event.getDamager() instanceof Player attacker)) {
-            return;
-        }
-        if (!(event.getEntity() instanceof Player target)) {
-            return;
-        }
-        if (!plugin.getGlitchManager().isGlitchEquipped(attacker, this)) {
-            return;
-        }
-        if (WorldGuardHook.isBlockedTarget(attacker, target, plugin.getGlitchSettings().getDisabledRegion())) {
-            return;
-        }
-        int threshold = Math.max(1, plugin.getGlitchSettings().getDashPassiveHitThreshold());
-        int hits = hitCounters.getOrDefault(attacker.getUniqueId(), 0) + 1;
-        if (hits >= threshold) {
-            hits = 0;
-            fireWindCharge(attacker, plugin.getGlitchSettings().getDashPassiveDamage());
-            attacker.sendMessage(ChatColor.WHITE + "Windcharge SHOT");
-        }
-        hitCounters.put(attacker.getUniqueId(), hits);
-    }
-
-    @EventHandler
-    public void onProjectileHit(ProjectileHitEvent event) {
-        if (!(event.getEntity() instanceof WindCharge windCharge)) {
-            return;
-        }
-        if (!windCharge.getPersistentDataContainer().has(projectileKey, PersistentDataType.INTEGER)) {
-            return;
-        }
-        if (!(event.getHitEntity() instanceof Player target)) {
-            return;
-        }
-        if (!(windCharge.getShooter() instanceof Player shooter)) {
-            return;
-        }
-        if (target.getUniqueId().equals(shooter.getUniqueId())) {
-            return;
-        }
-        if (WorldGuardHook.isBlockedTarget(shooter, target, plugin.getGlitchSettings().getDisabledRegion())) {
-            return;
-        }
-        double damage = windCharge.getPersistentDataContainer().getOrDefault(damageKey, PersistentDataType.DOUBLE, 0.0);
-        if (damage <= 0) {
-            return;
-        }
-        target.damage(damage, shooter);
-        target.setNoDamageTicks(0);
-        target.getWorld().playSound(target.getLocation(), Sound.ENTITY_GENERIC_HURT, 0.7f, 1.1f);
-    }
-
-    private void startBarrage(Player player) {
-        int count = Math.max(1, plugin.getGlitchSettings().getDashBarrageCount());
-        int intervalTicks = Math.max(1, plugin.getGlitchSettings().getDashBarrageIntervalTicks());
-        double damage = plugin.getGlitchSettings().getDashBarrageDamage();
-        int[] remaining = {count};
-        Bukkit.getScheduler().runTaskTimer(plugin, task -> {
-            if (!player.isOnline() || player.isDead()) {
-                task.cancel();
-                return;
-            }
-            fireWindCharge(player, damage);
-            remaining[0]--;
-            if (remaining[0] <= 0) {
-                task.cancel();
-            }
-        }, 0L, intervalTicks);
-    }
-
-    private void fireWindCharge(Player player, double damage) {
-        Vector direction = player.getLocation().getDirection().normalize();
-        WindCharge windCharge = player.launchProjectile(WindCharge.class);
-        windCharge.setVelocity(direction.multiply(1.6));
-        windCharge.getPersistentDataContainer().set(projectileKey, PersistentDataType.INTEGER, 1);
-        windCharge.getPersistentDataContainer().set(damageKey, PersistentDataType.DOUBLE, damage);
-        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 0.8f, 1.4f);
     }
 }

@@ -23,11 +23,11 @@ public class GlitchSettings {
     private String disabledRegion;
     private int hypnosisEscapeClicks;
     private long telekinesisControlDurationMillis;
-    private int dashPassiveHitThreshold;
-    private double dashPassiveDamage;
-    private int dashBarrageCount;
-    private double dashBarrageDamage;
-    private int dashBarrageIntervalTicks;
+    private int windchargePassiveHitThreshold;
+    private double windchargePassiveDamage;
+    private int windchargeBarrageCount;
+    private double windchargeBarrageDamage;
+    private int windchargeBarrageIntervalTicks;
 
     public GlitchSettings(GlitchSMP plugin) {
         this.plugin = plugin;
@@ -69,7 +69,7 @@ public class GlitchSettings {
         loadProfiles();
         this.hypnosisEscapeClicks = readEscapeClicks();
         this.telekinesisControlDurationMillis = readTelekinesisControlDurationMillis();
-        readDashSettings();
+        readWindchargeSettings();
     }
 
     private long toMillis(ConfigurationSection section, String key, long fallbackMillis) {
@@ -155,24 +155,24 @@ public class GlitchSettings {
         return telekinesisControlDurationMillis;
     }
 
-    public int getDashPassiveHitThreshold() {
-        return dashPassiveHitThreshold;
+    public int getWindchargePassiveHitThreshold() {
+        return windchargePassiveHitThreshold;
     }
 
-    public double getDashPassiveDamage() {
-        return dashPassiveDamage;
+    public double getWindchargePassiveDamage() {
+        return windchargePassiveDamage;
     }
 
-    public int getDashBarrageCount() {
-        return dashBarrageCount;
+    public int getWindchargeBarrageCount() {
+        return windchargeBarrageCount;
     }
 
-    public double getDashBarrageDamage() {
-        return dashBarrageDamage;
+    public double getWindchargeBarrageDamage() {
+        return windchargeBarrageDamage;
     }
 
-    public int getDashBarrageIntervalTicks() {
-        return dashBarrageIntervalTicks;
+    public int getWindchargeBarrageIntervalTicks() {
+        return windchargeBarrageIntervalTicks;
     }
 
     public FileConfiguration getRawConfig() {
@@ -211,12 +211,12 @@ public class GlitchSettings {
         return entry.getLong("controlDurationSeconds") * 1000L;
     }
 
-    private void readDashSettings() {
-        ConfigurationSection entry = config.getConfigurationSection("perGlitch.DASH");
-        this.dashPassiveHitThreshold = entry != null ? entry.getInt("passiveHitThreshold", 10) : 10;
-        this.dashPassiveDamage = entry != null ? entry.getDouble("passiveDamage", 5.0) : 5.0;
-        this.dashBarrageCount = entry != null ? entry.getInt("barrageCount", 10) : 10;
-        this.dashBarrageDamage = entry != null ? entry.getDouble("barrageDamage", 5.0) : 5.0;
-        this.dashBarrageIntervalTicks = entry != null ? entry.getInt("barrageIntervalTicks", 2) : 2;
+    private void readWindchargeSettings() {
+        ConfigurationSection entry = config.getConfigurationSection("perGlitch.WINDCHARGE");
+        this.windchargePassiveHitThreshold = entry != null ? entry.getInt("passiveHitThreshold", 10) : 10;
+        this.windchargePassiveDamage = entry != null ? entry.getDouble("passiveDamage", 5.0) : 5.0;
+        this.windchargeBarrageCount = entry != null ? entry.getInt("barrageCount", 10) : 10;
+        this.windchargeBarrageDamage = entry != null ? entry.getDouble("barrageDamage", 5.0) : 5.0;
+        this.windchargeBarrageIntervalTicks = entry != null ? entry.getInt("barrageIntervalTicks", 2) : 2;
     }
 }
