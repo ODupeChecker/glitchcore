@@ -69,6 +69,7 @@ public class GlitchManager {
             if (slots[i] == null) {
                 slots[i] = glitch;
                 persistGlitchSlot(player, i, glitch);
+                glitch.onEquip(player);
                 return OptionalInt.of(i);
             }
         }
@@ -93,6 +94,9 @@ public class GlitchManager {
         Glitch removed = slots[slot];
         if (removed != null && isGlitchActive(player, removed)) {
             deactivateGlitch(player, removed);
+        }
+        if (removed != null) {
+            removed.onUnequip(player);
         }
         
         slots[slot] = null;
@@ -324,6 +328,11 @@ public class GlitchManager {
         }
 
         equippedGlitches.put(player.getUniqueId(), slots);
+        for (Glitch glitch : slots) {
+            if (glitch != null) {
+                glitch.onEquip(player);
+            }
+        }
         int duplicateSlot = findDuplicateSlot(slots);
         if (duplicateSlot != -1) {
             withdrawSlot(player, duplicateSlot);
@@ -344,6 +353,9 @@ public class GlitchManager {
             for (Glitch glitch : slots) {
                 if (glitch != null && isGlitchActive(player, glitch)) {
                     deactivateGlitch(player, glitch);
+                }
+                if (glitch != null) {
+                    glitch.onUnequip(player);
                 }
             }
         }

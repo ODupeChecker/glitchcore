@@ -106,9 +106,12 @@ perGlitch:
     cooldownSeconds: 90
     baseDamage: 2.0
   WINDBURST:
-    durationSeconds: 2
+    durationSeconds: 0
     cooldownSeconds: 30
-    baseDamage: 3.0
+    passiveHitThreshold: 10
+    barrageCount: 6
+    barrageIntervalTicks: 4
+    barrageDamage: 5.0
   HYPNOSIS:
     durationSeconds: 6
     cooldownSeconds: 120
