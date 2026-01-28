@@ -93,7 +93,7 @@ public enum GlitchType {
         secondsToMillis(30),
         secondsToMillis(2),
         7,
-        ""
+        ""
     ),
     WINDCHARGE(
         "Windcharge Glitch",
@@ -101,7 +101,7 @@ public enum GlitchType {
         secondsToMillis(30),
         0,
         24,
-        ""
+        ""
     ),
     HYPNOSIS(
         "Hypnosis Glitch",
