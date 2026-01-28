@@ -23,6 +23,7 @@
         { "type": "bitmap", "file": "minecraft:item/custom/glitches/soul_splitter.png", "ascent": 10, "height": 16, "chars": ["\uE921"] },
         { "type": "bitmap", "file": "minecraft:item/custom/glitches/morph_g.png", "ascent": 10, "height": 16, "chars": ["\uE922"] },
         { "type": "bitmap", "file": "minecraft:item/custom/glitches/voodoo_g.png", "ascent": 10, "height": 16, "chars": ["\uE923"] },
+        { "type": "bitmap", "file": "minecraft:item/custom/glitches/dash_g.png", "ascent": 10, "height": 16, "chars": ["\uE924"] },
 
 
         { "type": "bitmap", "file": "minecraft:chat/icons/screen.png", "ascent": 70, "height": 140, "chars": [""] },      // 005

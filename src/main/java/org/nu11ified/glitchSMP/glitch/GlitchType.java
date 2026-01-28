@@ -87,6 +87,14 @@ public enum GlitchType {
         2,
         ""
     ),
+    DASH(
+        "Dash Glitch",
+        "Burst forward in the direction you're facing.",
+        secondsToMillis(45),
+        0,
+        24,
+        "\uE924"
+    ),
     WINDBURST(
         "Windcharge Glitch",
         "Take 10 hits to auto-fire a wind charge. Activate to unleash a barrage.",

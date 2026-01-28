@@ -24,7 +24,8 @@
       {"predicate":{"custom_model_data":20},"model":"custom/glitches/dimensional_g"},
       {"predicate":{"custom_model_data":21},"model":"custom/glitches/soul_splitter"},
       {"predicate":{"custom_model_data":22},"model":"custom/glitches/morph_g"},
-      {"predicate":{"custom_model_data":23},"model":"custom/glitches/voodoo_g"}
+      {"predicate":{"custom_model_data":23},"model":"custom/glitches/voodoo_g"},
+      {"predicate":{"custom_model_data":24},"model":"custom/glitches/dash_g"}
 
   ]
 }

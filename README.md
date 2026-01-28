@@ -16,7 +16,8 @@ Only the glitches that exist in the bundled texturepack are enabled:
 - 🔴 **Redstone Glitch** — bonus damage near redstone power
 - 🧊 **Fake Block Glitch** — spawn a fake block from the held block
 - ❄ **Freeze Glitch** — freeze chained targets
-- 🌪 **Windburst Glitch** — dash forward at high speed
+- 💨 **Dash Glitch** — burst forward in the direction you're facing
+- 🌪 **Windburst Glitch** — unleash a barrage of wind charges after activation
 - 📘 **Hypnosis Glitch** — force Book & Quill signing + drop
 - 🌌 **Gravity Glitch** — low gravity in a short radius
 - 🐎 **Horsetamer Glitch** — summon a Skeleton Horse

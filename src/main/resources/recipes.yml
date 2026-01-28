@@ -20,6 +20,7 @@ items:
   L: minecraft:lead
   S: minecraft:stick
   D: minecraft:diamond
+  A: minecraft:feather
 
 # RECIPES:
 # Each glitch recipe uses the letters defined above in a 3x3 grid
@@ -73,6 +74,11 @@ FREEZE:
   - "I I I"
   - "I I I"
   - "I I I"
+
+DASH:
+  - "A A A"
+  - "A A A"
+  - "A A A"
 
 WINDBURST:
   - "F F F"

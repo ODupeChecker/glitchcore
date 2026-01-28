@@ -53,6 +53,9 @@ resourcePack:
   FREEZE:
     icon: ""
     modelData: 2
+  DASH:
+    icon: "\uE924"
+    modelData: 24
   WINDBURST:
     icon: ""
     modelData: 7
@@ -105,6 +108,11 @@ perGlitch:
     durationSeconds: 5
     cooldownSeconds: 90
     baseDamage: 2.0
+  DASH:
+    durationSeconds: 0
+    cooldownSeconds: 45
+    dashStrength: 1.5
+    verticalBoost: 0.1
   WINDBURST:
     durationSeconds: 0
     cooldownSeconds: 30

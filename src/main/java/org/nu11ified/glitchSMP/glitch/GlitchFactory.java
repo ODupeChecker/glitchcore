@@ -4,6 +4,7 @@ import org.nu11ified.glitchSMP.GlitchSMP;
 import org.nu11ified.glitchSMP.config.GlitchSettings;
 import org.nu11ified.glitchSMP.glitch.impl.BedrockGlitch;
 import org.nu11ified.glitchSMP.glitch.impl.ChunkGlitch;
+import org.nu11ified.glitchSMP.glitch.impl.DashGlitch;
 import org.nu11ified.glitchSMP.glitch.impl.EnchanterGlitch;
 import org.nu11ified.glitchSMP.glitch.impl.FakeBlockGlitch;
 import org.nu11ified.glitchSMP.glitch.impl.FreezeGlitch;
@@ -63,6 +64,8 @@ public class GlitchFactory {
                 return new FakeBlockGlitch(plugin, profile);
             case FREEZE:
                 return new FreezeGlitch(plugin, profile);
+            case DASH:
+                return new DashGlitch(plugin, profile);
             case WINDBURST:
                 return new WindburstGlitch(plugin, profile);
             case HYPNOSIS:

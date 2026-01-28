@@ -24,6 +24,7 @@ public class GlitchSettings {
     private int hypnosisEscapeClicks;
     private long telekinesisControlDurationMillis;
     private WindburstConfig windburstConfig;
+    private DashConfig dashConfig;
 
     public GlitchSettings(GlitchSMP plugin) {
         this.plugin = plugin;
@@ -66,6 +67,7 @@ public class GlitchSettings {
         this.hypnosisEscapeClicks = readEscapeClicks();
         this.telekinesisControlDurationMillis = readTelekinesisControlDurationMillis();
         this.windburstConfig = readWindburstConfig();
+        this.dashConfig = readDashConfig();
     }
 
     private long toMillis(ConfigurationSection section, String key, long fallbackMillis) {
@@ -155,6 +157,10 @@ public class GlitchSettings {
         return windburstConfig;
     }
 
+    public DashConfig getDashConfig() {
+        return dashConfig;
+    }
+
     public FileConfiguration getRawConfig() {
         return config;
     }
@@ -172,6 +178,9 @@ public class GlitchSettings {
     }
 
     public record WindburstConfig(int passiveHitThreshold, int barrageCount, int barrageIntervalTicks, double barrageDamage) {
+    }
+
+    public record DashConfig(double dashStrength, double verticalBoost) {
     }
 
     private int readEscapeClicks() {
@@ -206,5 +215,12 @@ public class GlitchSettings {
             Math.max(1, barrageIntervalTicks),
             Math.max(0.0, barrageDamage)
         );
+    }
+
+    private DashConfig readDashConfig() {
+        ConfigurationSection entry = config.getConfigurationSection("perGlitch.DASH");
+        double dashStrength = entry != null ? entry.getDouble("dashStrength", 1.5) : 1.5;
+        double verticalBoost = entry != null ? entry.getDouble("verticalBoost", 0.1) : 0.1;
+        return new DashConfig(Math.max(0.0, dashStrength), Math.max(0.0, verticalBoost));
     }
 }
