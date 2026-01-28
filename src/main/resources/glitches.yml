@@ -53,7 +53,7 @@ resourcePack:
   FREEZE:
     icon: ""
     modelData: 2
-  WINDBURST:
+  DASH:
     icon: ""
     modelData: 7
   HYPNOSIS:
@@ -105,10 +105,14 @@ perGlitch:
     durationSeconds: 5
     cooldownSeconds: 90
     baseDamage: 2.0
-  WINDBURST:
-    durationSeconds: 2
+  DASH:
+    durationSeconds: 0
     cooldownSeconds: 30
-    baseDamage: 3.0
+    passiveHitThreshold: 10
+    passiveDamage: 5.0
+    barrageCount: 10
+    barrageDamage: 5.0
+    barrageIntervalTicks: 2
   HYPNOSIS:
     durationSeconds: 6
     cooldownSeconds: 120

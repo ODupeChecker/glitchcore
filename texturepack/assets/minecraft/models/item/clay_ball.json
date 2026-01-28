@@ -8,7 +8,7 @@
       {"predicate":{"custom_model_data":4},"model":"custom/glitches/redstone_g"},
       {"predicate":{"custom_model_data":5},"model":"custom/glitches/enchantedbook_g"},
       {"predicate":{"custom_model_data":6},"model":"custom/glitches/virus_g"},
-      {"predicate":{"custom_model_data":7},"model":"custom/glitches/windcharge_g"},
+      {"predicate":{"custom_model_data":7},"model":"custom/glitches/dash_g"},
       {"predicate":{"custom_model_data":8},"model":"custom/glitches/firework_g"},
       {"predicate":{"custom_model_data":9},"model":"custom/glitches/hypnosis_g"},
       {"predicate":{"custom_model_data":10},"model":"custom/glitches/moon_g"},
