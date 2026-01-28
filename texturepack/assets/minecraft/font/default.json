@@ -7,7 +7,7 @@
   	{ "type": "bitmap", "file": "minecraft:item/custom/glitches/enchantedbook_g.png", "ascent": 10, "height": 16, "chars": [""] },// 905
  	{ "type": "bitmap", "file": "minecraft:item/custom/glitches/virus_g.png", "ascent": 10, "height": 16, "chars": [""] },        // 906
 	{ "type": "bitmap", "file": "minecraft:item/custom/glitches/windcharge_g.png", "ascent": 10, "height": 16, "chars": [""] },   // 907
-	{ "type": "bitmap", "file": "minecraft:item/custom/glitches/dash_g.png", "ascent": 10, "height": 16, "chars": [""] },     // 908
+	{ "type": "bitmap", "file": "minecraft:item/custom/glitches/dash_token.png", "ascent": 10, "height": 16, "chars": [""] },     // 908
  	{ "type": "bitmap", "file": "minecraft:item/custom/glitches/hypnosis_g.png", "ascent": 10, "height": 16, "chars": [""] },     // 909
   	{ "type": "bitmap", "file": "minecraft:item/custom/glitches/moon_g.png", "ascent": 10, "height": 16, "chars": [""] },         // 910
   	{ "type": "bitmap", "file": "minecraft:item/custom/glitches/horsetamer_g.png", "ascent": 10, "height": 16, "chars": [""] },   // 911
