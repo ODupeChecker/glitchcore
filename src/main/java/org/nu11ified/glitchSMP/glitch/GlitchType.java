@@ -134,6 +134,14 @@ public enum GlitchType {
         0,
         13,
         ""
+    ),
+    SOUL_SPLITTER(
+        "Soul Splitter Glitch",
+        "Prime your next hit to sever a target's soul from their body.",
+        minutesToMillis(5),
+        secondsToMillis(30),
+        21,
+        "\uE921"
     );
 
     private final String name;

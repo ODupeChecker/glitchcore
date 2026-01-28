@@ -71,6 +71,9 @@ resourcePack:
   RAYCAST:
     icon: ""
     modelData: 13
+  SOUL_SPLITTER:
+    icon: "\uE921"
+    modelData: 21
 
 perGlitch:
   BEDROCK:
@@ -131,3 +134,6 @@ perGlitch:
     durationSeconds: 0
     cooldownSeconds: 120
     baseDamage: 6.0
+  SOUL_SPLITTER:
+    durationSeconds: 30
+    cooldownSeconds: 300
