@@ -114,11 +114,11 @@ public class ActivationManager implements Listener {
             player.sendMessage(ChatColor.YELLOW + "Right-click a glitch item to equip it.");
             return;
         }
-        if (WorldGuardHook.isInRegion(player, "spawn")) {
+        if (WorldGuardHook.isInRegion(player, "spawn", plugin.getGlitchSettings().getDisabledWorld(), plugin)) {
             player.sendMessage(ChatColor.RED + "Abilities are disabled in spawn.");
             return;
         }
-        if (WorldGuardHook.isInRegion(player, plugin.getGlitchSettings().getDisabledRegion())) {
+        if (WorldGuardHook.isInRegion(player, plugin.getGlitchSettings().getDisabledRegion(), plugin.getGlitchSettings().getDisabledWorld(), plugin)) {
             player.sendMessage(ChatColor.RED + "Abilities only work outside of spawn");
             return;
         }

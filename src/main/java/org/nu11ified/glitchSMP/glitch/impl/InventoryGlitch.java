@@ -107,7 +107,7 @@ public class InventoryGlitch extends Glitch implements Listener {
         activeTargets.put(source.getUniqueId(), targetId);
         lockedPlayers.add(targetId);
         int durationTicks = (int) Math.max(20L, getDurationMillis() / 50L);
-        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, durationTicks, 0, false, true, true));
+        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, durationTicks, 0, false, true, true));
         restrictInventoryUse(target, durationTicks);
         effects.playActivation(target, getType());
         target.getWorld().playSound(target.getLocation(), Sound.BLOCK_NOTE_BLOCK_BIT, 1.0f, 0.5f);
