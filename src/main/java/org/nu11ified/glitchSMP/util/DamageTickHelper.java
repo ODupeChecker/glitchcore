@@ -24,7 +24,7 @@ public class DamageTickHelper {
             return;
         }
         if (target instanceof Player playerTarget && plugin instanceof org.nu11ified.glitchSMP.GlitchSMP glitchSMP) {
-            if (WorldGuardHook.isBlockedTarget(source, playerTarget, glitchSMP.getGlitchSettings().getDisabledRegion())) {
+            if (WorldGuardHook.isBlockedTarget(source, playerTarget, glitchSMP.getGlitchSettings().getDisabledRegion(), glitchSMP.getGlitchSettings().getDisabledWorld(), glitchSMP)) {
                 return;
             }
         }

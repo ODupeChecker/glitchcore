@@ -7,6 +7,7 @@ global:
     knockbackStrength: 0.4
   protection:
     disabledRegion: "spawn"
+    disabledWorld: "worldo"
   audio:
     activation:
       volume: 1.0

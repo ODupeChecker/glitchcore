@@ -81,7 +81,7 @@ public class FreezeGlitch extends Glitch implements Listener {
         if (!(event.getDamager() instanceof Player player) || !(event.getEntity() instanceof Player victim)) {
             return;
         }
-        if (WorldGuardHook.isBlockedTarget(player, victim, plugin.getGlitchSettings().getDisabledRegion())) {
+        if (WorldGuardHook.isBlockedTarget(player, victim, plugin.getGlitchSettings().getDisabledRegion(), plugin.getGlitchSettings().getDisabledWorld(), plugin)) {
             return;
         }
         if (!primedPlayers.remove(player.getUniqueId())) {

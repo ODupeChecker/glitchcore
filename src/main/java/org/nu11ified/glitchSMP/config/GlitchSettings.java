@@ -21,6 +21,7 @@ public class GlitchSettings {
     private VisualDefaults visualDefaults;
     private CombatDefaults combatDefaults;
     private String disabledRegion;
+    private String disabledWorld;
     private int hypnosisEscapeClicks;
     private long telekinesisControlDurationMillis;
     private WindburstConfig windburstConfig;
@@ -61,6 +62,8 @@ public class GlitchSettings {
         this.visualDefaults = loadVisualDefaults();
         this.combatDefaults = loadCombatDefaults();
         this.disabledRegion = config.getString("global.protection.disabledRegion", "spawn");
+        this.disabledWorld = config.getString("global.protection.disabledWorld", "worldo");
+        org.nu11ified.glitchSMP.util.WorldGuardHook.resetWarnings();
         profiles.clear();
         loadProfiles();
         this.hypnosisEscapeClicks = readEscapeClicks();
@@ -141,6 +144,10 @@ public class GlitchSettings {
 
     public String getDisabledRegion() {
         return disabledRegion;
+    }
+
+    public String getDisabledWorld() {
+        return disabledWorld;
     }
 
     public int getHypnosisEscapeClicks() {

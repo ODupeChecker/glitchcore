@@ -79,7 +79,7 @@ public class EnchanterGlitch extends Glitch implements Listener {
         if (!activePlayers.contains(player.getUniqueId())) {
             return;
         }
-        if (event.getEntity() instanceof Player target && WorldGuardHook.isBlockedTarget(player, target, plugin.getGlitchSettings().getDisabledRegion())) {
+        if (event.getEntity() instanceof Player target && WorldGuardHook.isBlockedTarget(player, target, plugin.getGlitchSettings().getDisabledRegion(), plugin.getGlitchSettings().getDisabledWorld(), plugin)) {
             return;
         }
         ItemStack weapon = player.getInventory().getItemInMainHand();

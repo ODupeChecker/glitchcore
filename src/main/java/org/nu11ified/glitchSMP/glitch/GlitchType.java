@@ -25,7 +25,7 @@ public enum GlitchType {
     ),
     INVENTORY(
         "Inventory Glitch",
-        "Scrambles a target's inventory and blocks item usage.",
+        "Prime your next hit to slow the target and block wind charges, blocks, and splash potions.",
         minutesToMillis(2),
         secondsToMillis(7),
         16,
