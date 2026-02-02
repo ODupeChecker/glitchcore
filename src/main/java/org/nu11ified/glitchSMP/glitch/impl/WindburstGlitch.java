@@ -92,7 +92,7 @@ public class WindburstGlitch extends Glitch implements Listener {
         if (!plugin.getGlitchManager().isGlitchEnabled(getType())) {
             return;
         }
-        if (WorldGuardHook.isInRegion(player, plugin.getGlitchSettings().getDisabledRegion())) {
+        if (WorldGuardHook.isInRegion(player, plugin.getGlitchSettings().getDisabledRegion(), plugin.getGlitchSettings().getDisabledWorld(), plugin)) {
             return;
         }
         UUID playerId = player.getUniqueId();
@@ -115,7 +115,7 @@ public class WindburstGlitch extends Glitch implements Listener {
         }
         if (windCharge.getShooter() instanceof Player shooter) {
             if (event.getEntity() instanceof Player target
-                && WorldGuardHook.isBlockedTarget(shooter, target, plugin.getGlitchSettings().getDisabledRegion())) {
+                && WorldGuardHook.isBlockedTarget(shooter, target, plugin.getGlitchSettings().getDisabledRegion(), plugin.getGlitchSettings().getDisabledWorld(), plugin)) {
                 return;
             }
         }

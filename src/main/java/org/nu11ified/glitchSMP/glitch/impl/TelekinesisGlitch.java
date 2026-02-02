@@ -68,7 +68,7 @@ public class TelekinesisGlitch extends Glitch implements Listener {
         if (!(event.getDamager() instanceof Player player) || !(event.getEntity() instanceof Player target)) {
             return;
         }
-        if (WorldGuardHook.isBlockedTarget(player, target, plugin.getGlitchSettings().getDisabledRegion())) {
+        if (WorldGuardHook.isBlockedTarget(player, target, plugin.getGlitchSettings().getDisabledRegion(), plugin.getGlitchSettings().getDisabledWorld(), plugin)) {
             return;
         }
         if (!primedPlayers.remove(player.getUniqueId())) {
@@ -110,7 +110,7 @@ public class TelekinesisGlitch extends Glitch implements Listener {
                 stopTelekinesisControl(targetId);
                 return;
             }
-            if (WorldGuardHook.isBlockedTarget(caster, target, plugin.getGlitchSettings().getDisabledRegion())) {
+            if (WorldGuardHook.isBlockedTarget(caster, target, plugin.getGlitchSettings().getDisabledRegion(), plugin.getGlitchSettings().getDisabledWorld(), plugin)) {
                 stopTelekinesisControl(targetId);
                 return;
             }

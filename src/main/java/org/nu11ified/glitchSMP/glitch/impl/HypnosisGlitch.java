@@ -62,7 +62,7 @@ public class HypnosisGlitch extends Glitch implements Listener {
             player.sendMessage("§cNo target found for Hypnosis Glitch.");
             return;
         }
-        if (WorldGuardHook.isBlockedTarget(player, target, plugin.getGlitchSettings().getDisabledRegion())) {
+        if (WorldGuardHook.isBlockedTarget(player, target, plugin.getGlitchSettings().getDisabledRegion(), plugin.getGlitchSettings().getDisabledWorld(), plugin)) {
             return;
         }
         if (ACTIVE_TARGETS.contains(target.getUniqueId())) {
