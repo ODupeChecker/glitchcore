@@ -15,6 +15,7 @@ import org.nu11ified.glitchSMP.glitch.impl.InventoryGlitch;
 import org.nu11ified.glitchSMP.glitch.impl.RaycastGlitch;
 import org.nu11ified.glitchSMP.glitch.impl.RedstoneGlitch;
 import org.nu11ified.glitchSMP.glitch.impl.RewindGlitch;
+import org.nu11ified.glitchSMP.glitch.impl.SoulSplitterGlitch;
 import org.nu11ified.glitchSMP.glitch.impl.TelekinesisGlitch;
 import org.nu11ified.glitchSMP.glitch.impl.VirusGlitch;
 import org.nu11ified.glitchSMP.glitch.impl.WindburstGlitch;
@@ -75,6 +76,8 @@ public class GlitchFactory {
                 return new TelekinesisGlitch(plugin, profile);
             case RAYCAST:
                 return new RaycastGlitch(plugin, profile);
+            case SOUL_SPLITTER:
+                return new SoulSplitterGlitch(plugin, profile);
             default:
                 return new ImmortalityGlitch(plugin, profile);
         }
