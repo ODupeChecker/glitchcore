@@ -15,20 +15,20 @@ public class GlitchSettings {
     private static final String CONFIG_FILE = "glitches.yml";
 
     private final GlitchSMP plugin;
-    private final FileConfiguration config;
+    private FileConfiguration config;
     private final Map<GlitchType, GlitchProfile> profiles = new EnumMap<>(GlitchType.class);
-    private final AudioDefaults audioDefaults;
-    private final VisualDefaults visualDefaults;
-    private final CombatDefaults combatDefaults;
+    private AudioDefaults audioDefaults;
+    private VisualDefaults visualDefaults;
+    private CombatDefaults combatDefaults;
+    private String disabledRegion;
+    private String disabledWorld;
+    private int hypnosisEscapeClicks;
+    private long telekinesisControlDurationMillis;
+    private WindburstConfig windburstConfig;
 
     public GlitchSettings(GlitchSMP plugin) {
         this.plugin = plugin;
-        ensureConfig();
-        this.config = YamlConfiguration.loadConfiguration(new File(plugin.getDataFolder(), CONFIG_FILE));
-        this.audioDefaults = loadAudioDefaults();
-        this.visualDefaults = loadVisualDefaults();
-        this.combatDefaults = loadCombatDefaults();
-        loadProfiles();
+        reload();
     }
 
     private void ensureConfig() {
@@ -53,6 +53,22 @@ public class GlitchSettings {
             double knockbackMultiplier = entry != null ? entry.getDouble("knockbackMultiplier", 1.0) : 1.0;
             profiles.put(type, new GlitchProfile(cooldownMillis, durationMillis, baseDamage, damageTicks, knockbackMultiplier));
         }
+    }
+
+    public void reload() {
+        ensureConfig();
+        this.config = YamlConfiguration.loadConfiguration(new File(plugin.getDataFolder(), CONFIG_FILE));
+        this.audioDefaults = loadAudioDefaults();
+        this.visualDefaults = loadVisualDefaults();
+        this.combatDefaults = loadCombatDefaults();
+        this.disabledRegion = config.getString("global.protection.disabledRegion", "spawn");
+        this.disabledWorld = config.getString("global.protection.disabledWorld", "worldo");
+        org.nu11ified.glitchSMP.util.WorldGuardHook.resetWarnings();
+        profiles.clear();
+        loadProfiles();
+        this.hypnosisEscapeClicks = readEscapeClicks();
+        this.telekinesisControlDurationMillis = readTelekinesisControlDurationMillis();
+        this.windburstConfig = readWindburstConfig();
     }
 
     private long toMillis(ConfigurationSection section, String key, long fallbackMillis) {
@@ -126,6 +142,26 @@ public class GlitchSettings {
         return combatDefaults;
     }
 
+    public String getDisabledRegion() {
+        return disabledRegion;
+    }
+
+    public String getDisabledWorld() {
+        return disabledWorld;
+    }
+
+    public int getHypnosisEscapeClicks() {
+        return hypnosisEscapeClicks;
+    }
+
+    public long getTelekinesisControlDurationMillis() {
+        return telekinesisControlDurationMillis;
+    }
+
+    public WindburstConfig getWindburstConfig() {
+        return windburstConfig;
+    }
+
     public FileConfiguration getRawConfig() {
         return config;
     }
@@ -140,5 +176,42 @@ public class GlitchSettings {
     }
 
     public record CombatDefaults(int damageTicks, int intervalTicks, double knockbackStrength) {
+    }
+
+    public record WindburstConfig(int passiveHitThreshold, int barrageCount, int barrageIntervalTicks, double barrageDamage) {
+    }
+
+    private int readEscapeClicks() {
+        int escapeClicks = config.getInt("perGlitch.HYPNOSIS.escapeClicks", 1);
+        return Math.max(1, escapeClicks);
+    }
+
+    private long readTelekinesisControlDurationMillis() {
+        ConfigurationSection entry = config.getConfigurationSection("perGlitch.TELEKINESIS");
+        long fallback = profiles.getOrDefault(GlitchType.TELEKINESIS, new GlitchProfile(
+            GlitchType.TELEKINESIS.getCooldownMillis(),
+            GlitchType.TELEKINESIS.getDurationMillis(),
+            0.0,
+            combatDefaults.damageTicks(),
+            1.0
+        )).durationMillis();
+        if (entry == null || !entry.contains("controlDurationSeconds")) {
+            return fallback;
+        }
+        return entry.getLong("controlDurationSeconds") * 1000L;
+    }
+
+    private WindburstConfig readWindburstConfig() {
+        ConfigurationSection entry = config.getConfigurationSection("perGlitch.WINDBURST");
+        int passiveHits = entry != null ? entry.getInt("passiveHitThreshold", 10) : 10;
+        int barrageCount = entry != null ? entry.getInt("barrageCount", 6) : 6;
+        int barrageIntervalTicks = entry != null ? entry.getInt("barrageIntervalTicks", 4) : 4;
+        double barrageDamage = entry != null ? entry.getDouble("barrageDamage", 5.0) : 5.0;
+        return new WindburstConfig(
+            Math.max(1, passiveHits),
+            Math.max(1, barrageCount),
+            Math.max(1, barrageIntervalTicks),
+            Math.max(0.0, barrageDamage)
+        );
     }
 }

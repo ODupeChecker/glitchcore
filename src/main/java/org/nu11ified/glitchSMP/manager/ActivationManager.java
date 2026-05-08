@@ -1,17 +1,25 @@
 package org.nu11ified.glitchSMP.manager;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.nu11ified.glitchSMP.GlitchSMP;
 import org.nu11ified.glitchSMP.glitch.Glitch;
 import org.nu11ified.glitchSMP.glitch.GlitchType;
 import org.nu11ified.glitchSMP.item.GlitchItemFactory;
+import org.nu11ified.glitchSMP.util.WorldGuardHook;
 
 import java.util.HashMap;
 import java.util.List;
@@ -106,6 +114,14 @@ public class ActivationManager implements Listener {
             player.sendMessage(ChatColor.YELLOW + "Right-click a glitch item to equip it.");
             return;
         }
+        if (WorldGuardHook.isInRegion(player, "spawn", plugin.getGlitchSettings().getDisabledWorld(), plugin)) {
+            player.sendMessage(ChatColor.RED + "Abilities are disabled in spawn.");
+            return;
+        }
+        if (WorldGuardHook.isInRegion(player, plugin.getGlitchSettings().getDisabledRegion(), plugin.getGlitchSettings().getDisabledWorld(), plugin)) {
+            player.sendMessage(ChatColor.RED + "Abilities only work outside of spawn");
+            return;
+        }
         
         // Determine which glitch to activate based on sneaking state
         boolean isSneaking = playerSneaking.getOrDefault(playerUUID, false);
@@ -117,9 +133,8 @@ public class ActivationManager implements Listener {
             player.sendMessage(ChatColor.RED + "No glitch equipped in " + (isSneaking ? "left" : "right") + " slot!");
             return;
         }
-
-        if (plugin.getAbilityBlocker().isAbilityBlocked(player)) {
-            player.sendMessage(ChatColor.RED + "Glitches are disabled in this region.");
+        if (!glitchManager.isGlitchEnabled(glitchToActivate.getType())) {
+            player.sendMessage(ChatColor.RED + glitchToActivate.getName() + " is currently disabled.");
             return;
         }
         
@@ -143,6 +158,87 @@ public class ActivationManager implements Listener {
                 player.sendMessage(ChatColor.RED + "Failed to activate " + glitchToActivate.getName());
             }
         }
+    }
+
+    /**
+     * Prevents glitch items from being placed into the offhand slot.
+     *
+     * @param event The inventory click event
+     */
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player)) {
+            return;
+        }
+        if (!(event.getClickedInventory() instanceof PlayerInventory)) {
+            return;
+        }
+        if (event.getSlot() != 40) {
+            return;
+        }
+        ItemStack cursor = event.getCursor();
+        ItemStack hotbarItem = null;
+        if (event.getClick() == ClickType.NUMBER_KEY && event.getHotbarButton() >= 0) {
+            hotbarItem = player.getInventory().getItem(event.getHotbarButton());
+        }
+        if (isGlitchItem(cursor) || isGlitchItem(hotbarItem)) {
+            event.setCancelled(true);
+            player.sendMessage(ChatColor.RED + "Glitches cannot be placed in the offhand slot.");
+        }
+    }
+
+    /**
+     * Prevents dragging glitch items into the offhand slot.
+     *
+     * @param event The inventory drag event
+     */
+    @EventHandler
+    public void onInventoryDrag(InventoryDragEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player)) {
+            return;
+        }
+        if (!isGlitchItem(event.getOldCursor())) {
+            return;
+        }
+        int offhandRawSlot = event.getView().getTopInventory().getSize() + 40;
+        if (event.getRawSlots().contains(offhandRawSlot)) {
+            event.setCancelled(true);
+            player.sendMessage(ChatColor.RED + "Glitches cannot be placed in the offhand slot.");
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onInventoryClickUnstackable(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player)) {
+            return;
+        }
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            ItemStack cursor = player.getItemOnCursor();
+            ItemStack clicked = event.getInventory().getItem(event.getSlot());
+            ensureUniqueGlitchId(cursor);
+            ensureUniqueGlitchId(clicked);
+            java.util.Optional<java.util.UUID> cursorId = glitchItemFactory.getGlitchItemId(cursor);
+            java.util.Optional<java.util.UUID> clickedId = glitchItemFactory.getGlitchItemId(clicked);
+            if (cursorId.isPresent() && cursorId.equals(clickedId)) {
+                glitchItemFactory.forceNewGlitchItemId(cursor);
+                player.setItemOnCursor(cursor);
+            }
+        });
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onInventoryDragUnstackable(InventoryDragEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player)) {
+            return;
+        }
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            ItemStack cursor = player.getItemOnCursor();
+            ensureUniqueGlitchId(cursor);
+            for (int rawSlot : event.getRawSlots()) {
+                ItemStack item = event.getView().getItem(rawSlot);
+                ensureUniqueGlitchId(item);
+            }
+        });
     }
     
     /**
@@ -190,5 +286,26 @@ public class ActivationManager implements Listener {
         UUID playerUUID = player.getUniqueId();
         currentGlitchSlot.remove(playerUUID);
         playerSneaking.remove(playerUUID);
+    }
+
+    private boolean isGlitchItem(ItemStack item) {
+        if (item == null) {
+            return false;
+        }
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) {
+            return false;
+        }
+        return glitchItemFactory.isGlitchItem(item);
+    }
+
+    private void ensureUniqueGlitchId(ItemStack item) {
+        if (item == null) {
+            return;
+        }
+        if (!glitchItemFactory.isGlitchItem(item)) {
+            return;
+        }
+        glitchItemFactory.ensureGlitchItemId(item);
     }
 }

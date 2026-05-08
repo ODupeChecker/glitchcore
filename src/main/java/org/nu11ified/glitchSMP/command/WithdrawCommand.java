@@ -60,11 +60,18 @@ public class WithdrawCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        Glitch removed = glitchManager.unequipGlitch(player, slotToWithdraw);
-        if (removed == null) {
+        Glitch equipped = glitchManager.getEquippedGlitch(player, slotToWithdraw);
+        if (equipped == null) {
             player.sendMessage(ChatColor.RED + "That slot is already empty.");
             return true;
         }
+        if (equipped.isOnCooldown()) {
+            long remainingSeconds = Math.max(1L, equipped.getRemainingCooldown() / 1000L);
+            player.sendMessage(ChatColor.RED + equipped.getName() + " is on cooldown for " + remainingSeconds + " more seconds!");
+            return true;
+        }
+
+        Glitch removed = glitchManager.unequipGlitch(player, slotToWithdraw);
 
         ItemStack item = glitchItemFactory.createGlitchItem(removed.getType());
         Location dropLocation = player.getLocation();

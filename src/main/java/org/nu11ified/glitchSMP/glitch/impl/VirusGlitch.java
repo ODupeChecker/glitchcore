@@ -1,5 +1,6 @@
 package org.nu11ified.glitchSMP.glitch.impl;
 
+import org.bukkit.Color;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -14,6 +15,7 @@ import org.nu11ified.glitchSMP.config.GlitchSettings;
 import org.nu11ified.glitchSMP.effects.GlitchEffects;
 import org.nu11ified.glitchSMP.glitch.Glitch;
 import org.nu11ified.glitchSMP.glitch.GlitchType;
+import org.nu11ified.glitchSMP.util.WorldGuardHook;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -57,6 +59,9 @@ public class VirusGlitch extends Glitch implements Listener {
         if (!(event.getDamager() instanceof Player attacker) || !(event.getEntity() instanceof Player target)) {
             return;
         }
+        if (WorldGuardHook.isBlockedTarget(attacker, target, plugin.getGlitchSettings().getDisabledRegion(), plugin.getGlitchSettings().getDisabledWorld(), plugin)) {
+            return;
+        }
         if (!primedPlayers.remove(attacker.getUniqueId())) {
             return;
         }
@@ -65,7 +70,15 @@ public class VirusGlitch extends Glitch implements Listener {
         }
         applyVirus(attacker, target);
         target.getWorld().playSound(target.getLocation(), Sound.ENTITY_HUSK_AMBIENT, 0.6f, 0.8f);
-        target.getWorld().spawnParticle(Particle.ENTITY_EFFECT, target.getLocation().add(0, 1, 0), 14, 0.4, 0.4, 0.4, 0.1);
+        target.getWorld().spawnParticle(
+            Particle.ENTITY_EFFECT,
+            target.getLocation().add(0, 1, 0),
+            14,
+            0.4,
+            0.4,
+            0.4,
+            Color.fromRGB(94, 205, 97)
+        );
     }
 
     private void applyVirus(Player source, Player target) {

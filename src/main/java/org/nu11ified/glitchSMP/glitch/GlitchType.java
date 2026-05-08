@@ -25,7 +25,7 @@ public enum GlitchType {
     ),
     INVENTORY(
         "Inventory Glitch",
-        "Scrambles a target's inventory and blocks item usage.",
+        "Prime your next hit to slow the target and block wind charges, blocks, and splash potions.",
         minutesToMillis(2),
         secondsToMillis(7),
         16,
@@ -88,8 +88,8 @@ public enum GlitchType {
         ""
     ),
     WINDBURST(
-        "Windburst Glitch",
-        "Launch yourself forward at blazing speed.",
+        "Windcharge Glitch",
+        "Take 10 hits to auto-fire a wind charge. Activate to unleash a barrage.",
         secondsToMillis(30),
         0,
         7,
@@ -134,6 +134,14 @@ public enum GlitchType {
         0,
         13,
         ""
+    ),
+    SOUL_SPLITTER(
+        "Soul Splitter Glitch",
+        "Prime your next hit to sever a target's soul from their body.",
+        minutesToMillis(5),
+        secondsToMillis(30),
+        21,
+        "\uE921"
     );
 
     private final String name;

@@ -5,6 +5,9 @@ global:
     damageTicks: 3
     intervalTicks: 5
     knockbackStrength: 0.4
+  protection:
+    disabledRegion: "spawn"
+    disabledWorld: "worldo"
   audio:
     activation:
       volume: 1.0
@@ -69,6 +72,9 @@ resourcePack:
   RAYCAST:
     icon: ""
     modelData: 13
+  SOUL_SPLITTER:
+    icon: "\uE921"
+    modelData: 21
 
 perGlitch:
   BEDROCK:
@@ -104,12 +110,16 @@ perGlitch:
     cooldownSeconds: 90
     baseDamage: 2.0
   WINDBURST:
-    durationSeconds: 2
+    durationSeconds: 0
     cooldownSeconds: 30
-    baseDamage: 3.0
+    passiveHitThreshold: 10
+    barrageCount: 6
+    barrageIntervalTicks: 4
+    barrageDamage: 5.0
   HYPNOSIS:
     durationSeconds: 6
     cooldownSeconds: 120
+    escapeClicks: 1
   GRAVITY:
     durationSeconds: 15
     cooldownSeconds: 60
@@ -120,7 +130,11 @@ perGlitch:
     durationSeconds: 15
     cooldownSeconds: 180
     baseDamage: 1.0
+    controlDurationSeconds: 15
   RAYCAST:
     durationSeconds: 0
     cooldownSeconds: 120
     baseDamage: 6.0
+  SOUL_SPLITTER:
+    durationSeconds: 30
+    cooldownSeconds: 300

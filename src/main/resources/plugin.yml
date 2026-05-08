@@ -7,11 +7,12 @@ softdepend: [WorldGuard]
 authors: [ Nu11ified @ Github ]
 description: "A plugin that adds glitches to the Glitch SMP server. Players can equip up to two glitches at a time to change gameplay from normal running around to PVP."
 website: https://github.com/nu11ified
+softdepend: [WorldGuard]
 
 commands:
   glitch:
     description: Main command for the Glitch SMP plugin
-    usage: /<command> <list|view|help> [player]
+    usage: /<command> <list|view|enable|disable|help> [player]
     permission: glitchsmp.command.glitch
     aliases: [g]
   glitches:
@@ -36,3 +37,9 @@ permissions:
   glitchsmp.command.withdraw:
     description: Allows withdrawing equipped glitches
     default: true
+  glitchsmp.command.glitch.manage:
+    description: Allows enabling or disabling glitches
+    default: op
+  glitchsmp.command.glitch.reload:
+    description: Allows reloading glitch configuration
+    default: op

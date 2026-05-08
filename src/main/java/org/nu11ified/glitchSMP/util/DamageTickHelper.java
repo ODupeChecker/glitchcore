@@ -8,6 +8,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
 import org.nu11ified.glitchSMP.effects.GlitchEffects;
 import org.nu11ified.glitchSMP.glitch.GlitchType;
+import org.nu11ified.glitchSMP.util.WorldGuardHook;
 
 public class DamageTickHelper {
     private final Plugin plugin;
@@ -24,8 +25,10 @@ public class DamageTickHelper {
         if (ticks <= 0) {
             return;
         }
-        if (target instanceof Player playerTarget && abilityBlocker.isAbilityBlocked(playerTarget)) {
-            return;
+        if (target instanceof Player playerTarget && plugin instanceof org.nu11ified.glitchSMP.GlitchSMP glitchSMP) {
+            if (WorldGuardHook.isBlockedTarget(source, playerTarget, glitchSMP.getGlitchSettings().getDisabledRegion(), glitchSMP.getGlitchSettings().getDisabledWorld(), glitchSMP)) {
+                return;
+            }
         }
         double perTick = totalDamage / ticks;
         Vector knockback = target.getLocation().toVector().subtract(source.getLocation().toVector()).normalize().multiply(knockbackStrength);

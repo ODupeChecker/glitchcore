@@ -1,35 +1,37 @@
 package org.nu11ified.glitchSMP.glitch.impl;
 
 import org.bukkit.Bukkit;
-import org.bukkit.Particle;
-import org.bukkit.Sound;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.NamespacedKey;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.WindCharge;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitTask;
-import org.bukkit.util.Vector;
 import org.nu11ified.glitchSMP.GlitchSMP;
 import org.nu11ified.glitchSMP.config.GlitchSettings;
 import org.nu11ified.glitchSMP.effects.GlitchEffects;
 import org.nu11ified.glitchSMP.glitch.Glitch;
 import org.nu11ified.glitchSMP.glitch.GlitchType;
-import org.nu11ified.glitchSMP.util.DamageTickHelper;
+import org.nu11ified.glitchSMP.util.WorldGuardHook;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class WindburstGlitch extends Glitch {
-    private static final String MODIFIER_NAME = "windburst_resist";
-
+public class WindburstGlitch extends Glitch implements Listener {
+    private static final String BARRAGE_KEY = "windburst_barrage";
     private final GlitchSMP plugin;
     private final GlitchEffects effects;
-    private final DamageTickHelper damageTickHelper;
-    private final GlitchSettings.GlitchProfile profile;
-    private final Map<UUID, BukkitTask> cleanupTasks = new HashMap<>();
+    private final GlitchSettings.WindburstConfig config;
+    private final Map<UUID, Integer> hitCounts = new HashMap<>();
+    private final Map<UUID, BukkitTask> barrageTasks = new HashMap<>();
+    private final NamespacedKey barrageKey;
+    private boolean registered;
 
     public WindburstGlitch(GlitchSMP plugin, GlitchSettings.GlitchProfile profile) {
         super(
@@ -41,45 +43,125 @@ public class WindburstGlitch extends Glitch {
         );
         this.plugin = plugin;
         this.effects = plugin.getGlitchEffects();
-        this.damageTickHelper = plugin.getDamageTickHelper();
-        this.profile = profile;
+        this.config = plugin.getGlitchSettings().getWindburstConfig();
+        this.barrageKey = new NamespacedKey(plugin, BARRAGE_KEY);
+    }
+
+    @Override
+    public void onEquip(Player player) {
+        if (!registered) {
+            plugin.getServer().getPluginManager().registerEvents(this, plugin);
+            registered = true;
+        }
+    }
+
+    @Override
+    public void onUnequip(Player player) {
+        UUID playerId = player.getUniqueId();
+        hitCounts.remove(playerId);
+        stopBarrage(playerId);
+        if (registered) {
+            HandlerList.unregisterAll(this);
+            registered = false;
+        }
     }
 
     @Override
     protected void onActivate(Player player) {
-        Vector velocity = player.getLocation().getDirection().normalize().multiply(2.0);
-        player.setVelocity(velocity);
-        player.getWorld().spawnParticle(Particle.CLOUD, player.getLocation().add(0, 1, 0), 12, 0.3, 0.3, 0.3, 0.05);
-        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_FLAP, 1.0f, 1.2f);
+        startBarrage(player);
         effects.playActivation(player, getType());
-
-        AttributeModifier modifier = new AttributeModifier(new NamespacedKey(plugin, MODIFIER_NAME), 1.0, AttributeModifier.Operation.ADD_NUMBER);
-        if (player.getAttribute(Attribute.KNOCKBACK_RESISTANCE) != null) {
-            player.getAttribute(Attribute.KNOCKBACK_RESISTANCE).addModifier(modifier);
-        }
-
-        cleanupTasks.put(player.getUniqueId(), Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            if (player.getAttribute(Attribute.KNOCKBACK_RESISTANCE) != null) {
-                player.getAttribute(Attribute.KNOCKBACK_RESISTANCE).removeModifier(modifier);
-            }
-        }, 20L));
-
-        if (profile.baseDamage() > 0) {
-            Collection<LivingEntity> targets = player.getLocation().getNearbyLivingEntities(2.5, entity -> entity != player);
-            for (LivingEntity target : targets) {
-                damageTickHelper.applyDamageTicks(player, target, getType(), profile.baseDamage(), profile.damageTicks(),
-                    plugin.getGlitchSettings().getCombatDefaults().intervalTicks(),
-                    plugin.getGlitchSettings().getCombatDefaults().knockbackStrength() * profile.knockbackMultiplier());
-            }
-        }
     }
 
     @Override
     protected void onDeactivate(Player player) {
-        BukkitTask task = cleanupTasks.remove(player.getUniqueId());
+        stopBarrage(player.getUniqueId());
+        effects.playEnd(player, getType());
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerDamaged(EntityDamageEvent event) {
+        if (!(event.getEntity() instanceof Player player)) {
+            return;
+        }
+        if (event.getFinalDamage() <= 0) {
+            return;
+        }
+        if (!plugin.getGlitchManager().isGlitchEquipped(player, this)) {
+            return;
+        }
+        if (!plugin.getGlitchManager().isGlitchEnabled(getType())) {
+            return;
+        }
+        if (WorldGuardHook.isInRegion(player, plugin.getGlitchSettings().getDisabledRegion(), plugin.getGlitchSettings().getDisabledWorld(), plugin)) {
+            return;
+        }
+        UUID playerId = player.getUniqueId();
+        int hits = hitCounts.getOrDefault(playerId, 0) + 1;
+        int threshold = config.passiveHitThreshold();
+        if (hits >= threshold) {
+            hits -= threshold;
+            fireWindCharge(player, false);
+        }
+        hitCounts.put(playerId, hits);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onWindChargeDamage(EntityDamageByEntityEvent event) {
+        if (!(event.getDamager() instanceof WindCharge windCharge)) {
+            return;
+        }
+        if (!isBarrageCharge(windCharge)) {
+            return;
+        }
+        if (windCharge.getShooter() instanceof Player shooter) {
+            if (event.getEntity() instanceof Player target
+                && WorldGuardHook.isBlockedTarget(shooter, target, plugin.getGlitchSettings().getDisabledRegion(), plugin.getGlitchSettings().getDisabledWorld(), plugin)) {
+                return;
+            }
+        }
+        event.setDamage(config.barrageDamage());
+    }
+
+    private void startBarrage(Player player) {
+        UUID playerId = player.getUniqueId();
+        stopBarrage(playerId);
+        int barrageCount = config.barrageCount();
+        int intervalTicks = config.barrageIntervalTicks();
+        BukkitTask task = Bukkit.getScheduler().runTaskTimer(plugin, new Runnable() {
+            private int fired = 0;
+
+            @Override
+            public void run() {
+                if (!player.isOnline() || player.isDead()) {
+                    stopBarrage(playerId);
+                    return;
+                }
+                fireWindCharge(player, true);
+                fired++;
+                if (fired >= barrageCount) {
+                    stopBarrage(playerId);
+                }
+            }
+        }, 0L, intervalTicks);
+        barrageTasks.put(playerId, task);
+    }
+
+    private void stopBarrage(UUID playerId) {
+        BukkitTask task = barrageTasks.remove(playerId);
         if (task != null) {
             task.cancel();
         }
-        effects.playEnd(player, getType());
+    }
+
+    private void fireWindCharge(Player player, boolean isBarrage) {
+        WindCharge windCharge = player.launchProjectile(WindCharge.class);
+        if (isBarrage) {
+            PersistentDataContainer container = windCharge.getPersistentDataContainer();
+            container.set(barrageKey, PersistentDataType.BYTE, (byte) 1);
+        }
+    }
+
+    private boolean isBarrageCharge(WindCharge windCharge) {
+        return windCharge.getPersistentDataContainer().has(barrageKey, PersistentDataType.BYTE);
     }
 }

@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
  * Command executor for the glitch command.
  */
 public class GlitchCommand implements CommandExecutor, TabCompleter {
+    private final GlitchSMP plugin;
     private final GlitchManager glitchManager;
     
     /**
@@ -28,6 +29,7 @@ public class GlitchCommand implements CommandExecutor, TabCompleter {
      * @param glitchManager The glitch manager instance
      */
     public GlitchCommand(GlitchSMP plugin, GlitchManager glitchManager) {
+        this.plugin = plugin;
         this.glitchManager = glitchManager;
     }
     
@@ -46,9 +48,15 @@ public class GlitchCommand implements CommandExecutor, TabCompleter {
             case "view":
             case "veiw":
                 return handleViewCommand(sender, args);
+            case "disable":
+                return handleToggleCommand(sender, args, false);
+            case "enable":
+                return handleToggleCommand(sender, args, true);
             case "help":
                 sendHelpMessage(sender);
                 return true;
+            case "reload":
+                return handleReloadCommand(sender);
             default:
                 sender.sendMessage(ChatColor.RED + "Unknown subcommand: " + subCommand);
                 sendHelpMessage(sender);
@@ -74,7 +82,8 @@ public class GlitchCommand implements CommandExecutor, TabCompleter {
             // List all available glitch types
             sender.sendMessage(ChatColor.YELLOW + "Available Glitch Types:");
             for (GlitchType type : GlitchType.values()) {
-                sender.sendMessage(ChatColor.YELLOW + "- " + type.getName() + ": " + ChatColor.GRAY + type.getDescription());
+                String status = glitchManager.isGlitchEnabled(type) ? "" : ChatColor.RED + " (Disabled)";
+                sender.sendMessage(ChatColor.YELLOW + "- " + type.getName() + ": " + ChatColor.GRAY + type.getDescription() + status);
             }
         } else if (sender instanceof Player) {
             Player player = (Player) sender;
@@ -87,7 +96,8 @@ public class GlitchCommand implements CommandExecutor, TabCompleter {
             
             sender.sendMessage(ChatColor.YELLOW + "Available Glitch Types:");
             for (GlitchType type : GlitchType.values()) {
-                sender.sendMessage(ChatColor.YELLOW + "- " + type.getName() + ": " + ChatColor.GRAY + type.getDescription());
+                String status = glitchManager.isGlitchEnabled(type) ? "" : ChatColor.RED + " (Disabled)";
+                sender.sendMessage(ChatColor.YELLOW + "- " + type.getName() + ": " + ChatColor.GRAY + type.getDescription() + status);
             }
         } else {
             sender.sendMessage(ChatColor.RED + "Usage: /glitch list [all]");
@@ -126,6 +136,40 @@ public class GlitchCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(ChatColor.GRAY + "Left Slot: " + (leftSlot == null ? ChatColor.DARK_GRAY + "Empty" : ChatColor.GREEN + leftSlot.getName()));
         return true;
     }
+
+    private boolean handleReloadCommand(CommandSender sender) {
+        if (!sender.hasPermission("glitchsmp.command.glitch.reload")) {
+            sender.sendMessage(ChatColor.RED + "You don't have permission to use this command.");
+            return true;
+        }
+        plugin.getGlitchSettings().reload();
+        sender.sendMessage(ChatColor.GREEN + "Glitch configuration reloaded.");
+        return true;
+    }
+
+    private boolean handleToggleCommand(CommandSender sender, String[] args, boolean enable) {
+        if (!sender.hasPermission("glitchsmp.command.glitch.manage")) {
+            sender.sendMessage(ChatColor.RED + "You don't have permission to use this command.");
+            return true;
+        }
+        if (args.length < 2) {
+            sender.sendMessage(ChatColor.RED + "Usage: /glitch " + (enable ? "enable" : "disable") + " <glitch name>");
+            return true;
+        }
+        GlitchType type = resolveGlitchType(args, 1);
+        if (type == null) {
+            sender.sendMessage(ChatColor.RED + "Unknown glitch: " + String.join(" ", Arrays.copyOfRange(args, 1, args.length)));
+            return true;
+        }
+        if (enable) {
+            glitchManager.enableGlitch(type);
+            sender.sendMessage(ChatColor.GREEN + "Enabled " + type.getName() + ".");
+        } else {
+            glitchManager.disableGlitch(type);
+            sender.sendMessage(ChatColor.RED + "Disabled " + type.getName() + ".");
+        }
+        return true;
+    }
     
     /**
      * Sends the help message to the sender
@@ -136,6 +180,9 @@ public class GlitchCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(ChatColor.YELLOW + "Glitch SMP Commands:");
         sender.sendMessage(ChatColor.YELLOW + "/glitch list [all] " + ChatColor.GRAY + "- Lists equipped slots and available glitches");
         sender.sendMessage(ChatColor.YELLOW + "/glitch view [player] " + ChatColor.GRAY + "- View a player's equipped glitches");
+        sender.sendMessage(ChatColor.YELLOW + "/glitch enable <glitch name> " + ChatColor.GRAY + "- Enables a glitch");
+        sender.sendMessage(ChatColor.YELLOW + "/glitch disable <glitch name> " + ChatColor.GRAY + "- Disables a glitch");
+        sender.sendMessage(ChatColor.YELLOW + "/glitch reload " + ChatColor.GRAY + "- Reloads glitch configuration");
         sender.sendMessage(ChatColor.YELLOW + "/glitch help " + ChatColor.GRAY + "- Shows this help message");
         
         sender.sendMessage("");
@@ -153,7 +200,7 @@ public class GlitchCommand implements CommandExecutor, TabCompleter {
         if (args.length == 1) {
             // Suggest subcommands
             List<String> subcommands = new ArrayList<>();
-            subcommands.addAll(Arrays.asList("list", "view", "help"));
+            subcommands.addAll(Arrays.asList("list", "view", "enable", "disable", "help", "reload"));
             
             return subcommands.stream()
                 .filter(s -> s.startsWith(args[0].toLowerCase()))
@@ -168,6 +215,11 @@ public class GlitchCommand implements CommandExecutor, TabCompleter {
                     .map(Player::getName)
                     .filter(s -> s.toLowerCase().startsWith(args[1].toLowerCase()))
                     .collect(Collectors.toList());
+            } else if (subCommand.equals("enable") || subCommand.equals("disable")) {
+                return Arrays.stream(GlitchType.values())
+                    .map(GlitchType::getName)
+                    .filter(s -> s.toLowerCase().startsWith(args[1].toLowerCase()))
+                    .collect(Collectors.toList());
             } else if (subCommand.equals("list")) {
                 // Suggest "all"
                 return Arrays.asList("all")
@@ -178,5 +230,23 @@ public class GlitchCommand implements CommandExecutor, TabCompleter {
         }
         
         return new ArrayList<>();
+    }
+
+    private GlitchType resolveGlitchType(String[] args, int startIndex) {
+        String rawName = String.join(" ", Arrays.copyOfRange(args, startIndex, args.length)).trim();
+        if (rawName.isEmpty()) {
+            return null;
+        }
+        String normalized = normalize(rawName);
+        for (GlitchType type : GlitchType.values()) {
+            if (normalized.equals(normalize(type.name())) || normalized.equals(normalize(type.getName()))) {
+                return type;
+            }
+        }
+        return null;
+    }
+
+    private String normalize(String value) {
+        return value.toLowerCase().replace("_", "").replace(" ", "").replace("-", "");
     }
 }
