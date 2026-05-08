@@ -3,6 +3,7 @@ version: '1.0-SNAPSHOT'
 main: org.nu11ified.glitchSMP.GlitchSMP
 api-version: '1.21'
 load: STARTUP
+softdepend: [WorldGuard]
 authors: [ Nu11ified @ Github ]
 description: "A plugin that adds glitches to the Glitch SMP server. Players can equip up to two glitches at a time to change gameplay from normal running around to PVP."
 website: https://github.com/nu11ified

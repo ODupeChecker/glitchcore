@@ -22,6 +22,7 @@ import org.nu11ified.glitchSMP.manager.RecipeManager;
 import org.nu11ified.glitchSMP.manager.ActivationManager;
 import org.nu11ified.glitchSMP.manager.CraftingLimiter;
 import org.nu11ified.glitchSMP.util.DamageTickHelper;
+import org.nu11ified.glitchSMP.util.AbilityBlocker;
 
 /**
  * Main plugin class for Glitch SMP.
@@ -38,13 +39,15 @@ public final class GlitchSMP extends JavaPlugin implements Listener {
     private GlitchResourcePackRegistry resourcePackRegistry;
     private GlitchEffects glitchEffects;
     private DamageTickHelper damageTickHelper;
+    private AbilityBlocker abilityBlocker;
 
     @Override
     public void onEnable() {
         glitchSettings = new GlitchSettings(this);
         resourcePackRegistry = new GlitchResourcePackRegistry(glitchSettings);
         glitchEffects = new DefaultGlitchEffects(glitchSettings);
-        damageTickHelper = new DamageTickHelper(this, glitchEffects);
+        abilityBlocker = new AbilityBlocker(this);
+        damageTickHelper = new DamageTickHelper(this, glitchEffects, abilityBlocker);
 
         // Initialize components
         glitchFactory = new GlitchFactory(this);
@@ -204,15 +207,19 @@ public final class GlitchSMP extends JavaPlugin implements Listener {
         return glitchSettings;
     }
 
+    public AbilityBlocker getAbilityBlocker() {
+        return abilityBlocker;
+    }
+
+    public DamageTickHelper getDamageTickHelper() {
+        return damageTickHelper;
+    }
+
     public GlitchResourcePackRegistry getResourcePackRegistry() {
         return resourcePackRegistry;
     }
 
     public GlitchEffects getGlitchEffects() {
         return glitchEffects;
-    }
-
-    public DamageTickHelper getDamageTickHelper() {
-        return damageTickHelper;
     }
 }

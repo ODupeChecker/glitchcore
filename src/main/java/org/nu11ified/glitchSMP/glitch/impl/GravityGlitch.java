@@ -55,6 +55,9 @@ public class GravityGlitch extends Glitch {
         if (!owner.isOnline()) {
             return;
         }
+        if (plugin.getAbilityBlocker().isAbilityBlocked(owner)) {
+            return;
+        }
         owner.getWorld().spawnParticle(Particle.INSTANT_EFFECT, owner.getLocation().add(0, 0.5, 0), 12, 1.2, 0.2, 1.2, 0.05);
         for (Player nearby : owner.getWorld().getPlayers()) {
             if (nearby.getLocation().distance(owner.getLocation()) <= 6) {

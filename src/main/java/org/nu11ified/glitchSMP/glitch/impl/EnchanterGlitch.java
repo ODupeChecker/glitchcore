@@ -76,6 +76,12 @@ public class EnchanterGlitch extends Glitch implements Listener {
         if (!(event.getDamager() instanceof Player player)) {
             return;
         }
+        if (plugin.getAbilityBlocker().isAbilityBlocked(player)) {
+            return;
+        }
+        if (event.getEntity() instanceof Player target && plugin.getAbilityBlocker().isAbilityBlocked(target)) {
+            return;
+        }
         if (!activePlayers.contains(player.getUniqueId())) {
             return;
         }
